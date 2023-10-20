@@ -25,6 +25,7 @@ static osThreadAttr_t _dummyTaskThreadAttr =
 static uint8_t _is_running = 0;
 static uint8_t _is_init = 0;
 static uint8_t mode = 0;
+static float thrustpercent;
 
 
 
@@ -75,19 +76,29 @@ uint8_t dummy_task_is_running(void)
 void dummy_task_update(void *arg)
 {
     while(1)
-    {   mode = HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_5);      //read switch
-        kalman_timer_start();                           //start kalman for calibration
-        osDelay(2000);                                  //delay
-        printf("mode = %d\n",mode);
-        kalman_timer_stop();                            //stop kalman
-        control_timer_start();                          //start control
-        osDelay(1000);                                  //balance for a second
-        if (mode == 1){                                 //if switch is closed, change yref
-        control_set_speed(12*M_PI);                     //set speed to high velocity
-        osDelay(8000);                                  //approx time for 20m dash
-        control_set_speed(0);                           //set speed to zero
-        }
-        dummy_task_stop();
+    {   
+        // mode = HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_5);      //read switch
+        // // kalman_timer_start();                           //start kalman for calibration
+        // osDelay(2000);                                  //delay
+        // printf("mode = %d\n",mode);
+        // // kalman_timer_stop();                            //stop kalman
+        // // control_timer_start();                          //start control
+        // osDelay(1000);                                  //balance for a second
+        // if (mode == 1){                                 //if switch is closed, change yref
+        // control_set_speed(12*M_PI);                     //set speed to high velocity
+        // osDelay(8000);                                  //approx time for 20m dash
+        // // control_set_speed(0);                           //set speed to zero
+        // }
+
+        thrustpercent = 0;
+        velocity_adjust(thrustpercent);
+
+        osDelay(2000);
+        thrustpercent = 10;
+        velocity_adjust(thrustpercent);
+        osDelay(2000);
+        
+        // dummy_task_stop();
     }
 }
 

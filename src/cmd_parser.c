@@ -28,9 +28,9 @@ static void _help(int, char *[]);
 static void _reset(int, char *[]);
 static void _cmd_getEncoderCount(int, char *[]);
 static void _cmd_logEncData(int, char *[]);
-static void _cmd_logIMUData(int, char *[]);
+// static void _cmd_logIMUData(int, char *[]);
 static void _cmd_updateControl(int, char *[]);
-static void _cmd_updateKalman(int, char *[]);
+// static void _cmd_updateKalman(int, char *[]);
 static void _cmd_setReference(int, char *[]);
 
 // Modules that provide commands
@@ -44,9 +44,9 @@ static CMD_T cmd_table[] =
     {heartbeat_cmd      , "heartbeat"   , "[start|stop]"              , "Get status or start/stop heartbeat task"} ,
     {_cmd_getEncoderCount      , "getEncoder"   , ""              , "Displays the potentiometer voltage level."} ,
     {_cmd_logEncData      , "logEnc"    , ""              , "Logs 5 seconds of encoder data."} ,
-    {_cmd_logIMUData      , "logIMU"    , ""              , "Logs 5 seconds of IMU data."} ,
+    /*{_cmd_logIMUData      , "logIMU"    , ""              , "Logs 5 seconds of IMU data."} ,*/
     {_cmd_updateControl  , "getControl"   , "[x1,x2]"              , "Updates Control"} ,
-    {_cmd_updateKalman  , "getKalman"   , "[angle,vel]"              , "Runs through an iteration of the Kalman filter"} ,
+   /* {_cmd_updateKalman  , "getKalman"   , "[angle,vel]"              , "Runs through an iteration of the Kalman filter"} ,*/
     {_cmd_setReference  , "setRef"   , "[yref]"              , "Sets velocity reference"} ,
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
@@ -66,24 +66,24 @@ static void _cmd_setReference(int argc, char *argv[])
         printf("%f\n", getReference());
     }
 }
-static void _cmd_updateKalman(int argc, char *argv[])
-{
-    /* TODO: Supress compiler warnings for unused arguments */
-    if(argc != 3)
-        {
-            printf("Incorrect arguments\n");
-        }
-    else
-    {
-        kalman_set_angle(atof(argv[1]));
-        kalman_set_velocity(atof(argv[2]));
+// static void _cmd_updateKalman(int argc, char *argv[])
+// {
+//     /* TODO: Supress compiler warnings for unused arguments */
+//     if(argc != 3)
+//         {
+//             printf("Incorrect arguments\n");
+//         }
+//     else
+//     {
+//         kalman_set_angle(atof(argv[1]));
+//         kalman_set_velocity(atof(argv[2]));
     
-    kalman_update();
-    printf("%f\n", getKalmanAngle());
-    printf("%f\n", getKalmanVelocity());
-    printf("%f\n", getKalmanBias());
-    }
-}
+//     kalman_update();
+//     printf("%f\n", getKalmanAngle());
+//     printf("%f\n", getKalmanVelocity());
+//     printf("%f\n", getKalmanBias());
+//     }
+// }
 static void _cmd_updateControl(int argc, char *argv[])
 {
     /* TODO: Supress compiler warnings for unused arguments */
@@ -110,15 +110,15 @@ static void _cmd_logEncData(int argc, char *argv[])
     pend_logging_start();
 }
 
-static void _cmd_logIMUData(int argc, char *argv[])
-{
-    /* TODO: Supress compiler warnings for unused arguments */
-    UNUSED(argc);
-    UNUSED(argv);
+// static void _cmd_logIMUData(int argc, char *argv[])
+// {
+//     /* TODO: Supress compiler warnings for unused arguments */
+//     UNUSED(argc);
+//     UNUSED(argv);
     
-    /* TODO: Start pendulum data logging */
-    imu_logging_start();
-}
+//     /* TODO: Start pendulum data logging */
+//     imu_logging_start();
+// }
 
 void _cmd_getEncoderCount(int argc, char *argv[])
 {   // GET ENCODER CALLS THIS
