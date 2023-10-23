@@ -285,41 +285,6 @@ float getReference(void)
  void ctrl_update(void)
  {
 
-    // calculat xstar
-arm_mat_mult_f32(&ctrl_Nx, &ctrl_yref, &ctrl_xStar);
-//calculate ustar, make into long vector
-for (i = 0; i < 10; i++)
-    {
-        ctrl_Ustar_f32[i] = ctrl_Nu_f32[0]*ctrl_yref_f32[0];
-    }
-// TODO: Compute f vector
-arm_mat_sub_f32(&ctrl_x,&ctrl_xStar,&ctrl_xHat); 
-arm_mat_mult_f32(&ctrl_fBar, &ctrl_xHat, &ctrl_f);
-arm_mat_mult_f32(&ctrl_H,&ctrl_Ustar,&ctrl_result);
-arm_mat_add_f32(&ctrl_f,&ctrl_result,&ctrl_f);
-// TODO: Update b vector
-ctrl_b_f32[0] = ctrl_u_f32[0] + delta_u_max;
-ctrl_b_f32[CTRL_N_HORIZON] = -ctrl_u_f32[0] - delta_u_min;
 
-// TODO: Solve for optimal inputs over control horizon
-qpas_sub_noblas(CTRL_N_HORIZON,CTRL_N_EQ_CONST,CTRL_N_INEQ_CONST,CTRL_N_LB_CONST,CTRL_N_UB_CONST,ctrl_H_f32,ctrl_f_f32,ctrl_A_f32,ctrl_b_f32,ctrl_xl_f32,ctrl_xu_f32,ctrl_U_f32,ctrl_lm_f32, 0,
-&numits, &numadd, &numdrop);
 
-// float diff = ctrl_u_f32[0] - ctrl_U_f32[0];
-// diff = fabs(diff);
-
- // TODO: Extract first control term
- ctrl_u_f32[0] = ctrl_U_f32[0];
-
- // update integrator - this is integral action on velocity
-// float diff = ctrl_u_f32[0] - ctrl_Ustar_f32[0];
-// ctrl_x_f32[2] = ctrl_x_f32[2] + T*diff;
-
-// integrator on theta
-ctrl_x_f32[2] = ctrl_x_f32[2] + T*ctrl_x_f32[0];
-
-//printf("integrator = %f\n", ctrl_xHat_f32[2]);
- /* Print functions for debugging. Uncomment to use */
- // printmatrix (CTRL_N_HORIZON,CTRL_N_HORIZON,ctrl_H_f32,CTRL_N_HORIZON,"H");
-  //printvector (CTRL_N_HORIZON, ctrl_f_f32, "f");
  }

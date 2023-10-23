@@ -23,6 +23,14 @@ float ang_momentum;
 float ref = 0;
 float speed = 0;
 float thrustpercent;
+
+int32_t enc1_t=0;
+int32_t enc2_t= 0;
+int32_t enc3_t= 0;
+int32_t enc1_t1 = 0;
+int32_t enc2_t1= 0;
+int32_t enc3_t1= 0;
+int32_t enc1_diff;
 int i = 0;
 
 static void control_loop_update(void *arg);
@@ -60,7 +68,8 @@ void control_loop_init(void)
 void control_timer_start(void)
 {
     // int delay = 1000/FREQ;
-    int delay = 3000;
+    int delay = 5000;
+    printf("started\n");
     osTimerStart(_control_timer_id,delay);
 }
 
@@ -88,16 +97,30 @@ void kalman_loop_update(void *arg)  //kalman updates for calibration
 
 void control_loop_update(void *arg)
 {       UNUSED(arg);
-    i = 0;
-    if (i == 0){
-        thrustpercent = 0.01;
+
+
+    // if (i == 0){
+        thrustpercent = 10;
         velocity_adjust(thrustpercent);
-        i = 1;
+        // i = 1;
+    // }
+    // if (i == 1){
+    //     thrustpercent = 1;
+    //     velocity_adjust(thrustpercent);
+    //     i = 0;
+    // }
+
+    enc1_t = motor_encoder_getValue();
+    enc1_diff = enc1_t - enc1_t1;
+
+    if (enc1_diff < 0){
+        enc1_diff = enc1_diff + 2147483647;
     }
-    if (i == 1){
-        thrustpercent = 0.01;
-        velocity_adjust(thrustpercent);
-        i = 0;
-    }
+
+    angvel = motor_encoder_getAngle(enc1_diff);
+
+    printf("motor vel %0.1f\n", angvel);
+
+    enc1_t1 = enc1_t;
 }
 

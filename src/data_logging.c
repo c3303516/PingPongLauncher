@@ -53,19 +53,19 @@ in the next step) */
 
 static void log_imu(void)
 {
-    IMU_read();
-    float angle = get_acc_angle();
-    float angvel = get_gyroY();     //want angle of rotation about Y axis
-    result = motor_encoder_getAngle();
-    float sampleTime = logCount*0.005;
+    // IMU_read();
+    // float angle = get_acc_angle();
+    // float angvel = get_gyroY();     //want angle of rotation about Y axis
+    // result = motor_encoder_getAngle();
+    // float sampleTime = logCount*0.005;
 
-    printf("%f,%f,%f,%f\n", sampleTime, angle, angvel, result);
-    logCount++;
+    // printf("%f,%f,%f,%f\n", sampleTime, angle, angvel, result);
+    // logCount++;
 
-        if (logCount >= 1000){
-        logging_stop();
-        printf("finished\n");
-    }
+    //     if (logCount >= 1000){
+    //     logging_stop();
+    //     printf("finished\n");
+    // }
 }
 
 

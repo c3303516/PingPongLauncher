@@ -18,6 +18,11 @@ static int32_t enc_count;
 static uint8_t _is_init = 0;
 static float dutycycle;
 
+int32_t PB3 = 0;
+int32_t PC3 = 0;
+int32_t PB3old = 0;
+int32_t PC3old = 0;
+
 static void module_comms_report_timer_exp(void *arg);
 osTimerId_t     _comms_report_timer_id;  
 osTimerAttr_t   _comms_report_timer_attr = 
@@ -111,48 +116,79 @@ void velocity_adjust(float thrust)
 }
 
  void motor_encoder_init(void){
-
+//  OLD CODE
 /* TODO: Enable GPIOC clock */
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+        __HAL_RCC_GPIOB_CLK_ENABLE();
         __HAL_RCC_GPIOC_CLK_ENABLE();
- /* TODO: Initialise PC10, PC11 with:
- - Pin 0|1
- - Interrupt rising and falling edge
- - No pull
- - High frequency */
+//  /* TODO: Initialise PC10, PC11 with:
+//  - Pin 0|1
+//  - Interrupt rising and falling edge
+//  - No pull
+//  - High frequency */
+
+//         GPIO_InitTypeDef GPIO_InitStruct;
+//         GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;       //init pin 0
+//         GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+//         GPIO_InitStruct.Pull = GPIO_NOPULL;
+//         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+//         HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
         GPIO_InitTypeDef GPIO_InitStruct;
-        GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;       //init pin 0
+        GPIO_InitStruct.Pin = GPIO_PIN_3;       //init pin 0
         GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
         GPIO_InitStruct.Pull = GPIO_NOPULL;
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
         HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-
  /* TODO: Set priority of external interrupt lines 0,1 to 0x0f, 0x0f
  To find the IRQn_Type definition see "MCHA3500 Windows Toolchain\workspace\STM32Cube_F4_FW\Drivers\
 CMSIS\Device\ST\STM32F4xx\Include\stm32f446xx.h" */
 
-    HAL_NVIC_SetPriority(EXTI0_IRQn, 0x0f, 0x0f);
-    HAL_NVIC_SetPriority(EXTI1_IRQn, 0x0f, 0x0f);
+
+// CHANGE THESE BACK TO 0 and 1
+    HAL_NVIC_SetPriority(EXTI3_IRQn, 0x0f, 0x0f);
+    // HAL_NVIC_SetPriority(EXTI1_IRQn, 0x0f, 0x0f);
 
  /* TODO: Enable external interrupt for lines 0, 1 */
-    HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-    HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+    HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+    // HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 
  }
 
-void EXTI0_IRQHandler(void)
+void EXTI3_IRQHandler(void)
  {
 /* TODO: Check if PC0 == PC1. Adjust encoder count accordingly. */
-    if ((HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0)) == (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_1)))
+    // if ((HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0)) == (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_1)))
+    //     {
+    //     enc_count++;
+    //     }
+    // else{
+    //     enc_count--;
+    //     }
+
+    // HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
+
+
+    PB3 = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_3);
+    PC3 = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_3);
+
+    if (PB3 != PB3old)
         {
         enc_count++;
+        HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
         }
-    else{
-        enc_count--;
+    if (PC3 != PC3old)
+        {
+        enc_count++;
+        HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
         }
-
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
+    
+    PB3old = PB3;
+    PC3old = PC3;
+ /* TODO: Reset interrupt */
+    // HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
 
 }
 
@@ -162,15 +198,17 @@ void EXTI1_IRQHandler(void) {
 /* TODO: Check if PC0 == PC1. Adjust encoder count accordingly. */
 
 
-    if ((HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0)) == (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_1)))
-        {
-        enc_count--;
-        } 
-    else{
-        enc_count++;
-        }
- /* TODO: Reset interrupt */
+//     if ((HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0)) == (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_1)))
+//         {
+//         enc_count--;
+//         } 
+//     else{
+//         enc_count++;
+//         }
+//  /* TODO: Reset interrupt */
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
+
+// do nothign
  }
 
  int32_t motor_encoder_getValue(void)
@@ -178,13 +216,14 @@ void EXTI1_IRQHandler(void) {
         return enc_count;
     }
 
-float motor_encoder_getAngle(void)
+
+float motor_encoder_getAngle(int32_t cnt)
     {
-        int32_t cnt = motor_encoder_getValue();
+        // int32_t cnt = motor_encoder_getValue();
 
-        // 12 * gear ration, in this case 5.
+        // 12 * gear ratio, in this case 5.
 
-        float angle = 2*M_PI*cnt/(12*5);          //convert encoder count to radians. Check this stuff at the bottom
+        float angle = 2*M_PI*cnt/(12*4.995);          //convert encoder count to radians. Check this stuff at the bottom
         return angle;
     }
 
