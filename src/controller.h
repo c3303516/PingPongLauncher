@@ -4,9 +4,9 @@
 /* Add function prototypes here */
 void ctrl_init(void);
 float getControl(void);
-void ctrl_update(void);
-void ctrl_set_x1(float);
-void ctrl_set_x2(float);
+void ctrl_update(float,float,float);
+// void ctrl_set_x1(float);
+// void ctrl_set_x2(float);
 void ctrl_set_yref(float);
 float getReference(void);
 

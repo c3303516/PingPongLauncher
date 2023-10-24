@@ -20,7 +20,7 @@ float velocity;
 float angvel;
 float u = 0;
 float ang_momentum;
-float ref = 0;
+float refvel = 0;
 float speed = 0;
 float thrustpercent;
 
@@ -31,6 +31,10 @@ int32_t enc1_t1 = 0;
 int32_t enc2_t1= 0;
 int32_t enc3_t1= 0;
 int32_t enc1_diff;
+static float errorold = 0;
+static float errornew = 0;
+static float erri = 0;
+static float derr = 0;
 int i = 0;
 
 static void control_loop_update(void *arg);
@@ -67,8 +71,8 @@ void control_loop_init(void)
 
 void control_timer_start(void)
 {
-    // int delay = 1000/FREQ;
-    int delay = 5000;
+    int delay = 1000/FREQ;
+    // int delay = 5000;
     printf("started\n");
     osTimerStart(_control_timer_id,delay);
 }
@@ -81,6 +85,7 @@ void control_timer_stop(void)
 void control_set_speed(float spd)
 {
     speed = spd;            //save speed from dummy_task
+    ctrl_set_yref(speed);
 }
 
 
@@ -98,29 +103,30 @@ void kalman_loop_update(void *arg)  //kalman updates for calibration
 void control_loop_update(void *arg)
 {       UNUSED(arg);
 
-
-    // if (i == 0){
-        thrustpercent = 10;
-        velocity_adjust(thrustpercent);
-        // i = 1;
-    // }
-    // if (i == 1){
-    //     thrustpercent = 1;
-    //     velocity_adjust(thrustpercent);
-    //     i = 0;
-    // }
-
+    // find error
     enc1_t = motor_encoder_getValue();
     enc1_diff = enc1_t - enc1_t1;
+    angvel = motor_encoder_getAngle(enc1_diff)/(1./FREQ);    //find ang velocity
 
-    if (enc1_diff < 0){
+    refvel = getReference();
+    // printf("referencevalue %0.1f\n", refvel);
+    errornew = refvel - angvel;
+
+    derr = (errornew - errorold)/(1./FREQ);      //find derr/dt
+    erri = (errornew - errorold)*(1./FREQ);      //find approx integral. maybe adjust this later
+
+    if (enc1_diff < 0){     //wrap around consideration for encodr count
         enc1_diff = enc1_diff + 2147483647;
     }
-
-    angvel = motor_encoder_getAngle(enc1_diff);
+    ctrl_update(errornew, erri, derr);      //update control
+    thrustpercent = getControl()/65535;
+    
+    printf("thrust %0.5f\n", thrustpercent);
+    velocity_adjust(thrustpercent);     //apply new velocity
 
     printf("motor vel %0.1f\n", angvel);
 
-    enc1_t1 = enc1_t;
+    enc1_t1 = enc1_t;       //update encoder count
+    errorold = errornew;
 }
 

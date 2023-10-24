@@ -29,8 +29,9 @@ static void _reset(int, char *[]);
 static void _cmd_getEncoderCount(int, char *[]);
 static void _cmd_logEncData(int, char *[]);
 // static void _cmd_logIMUData(int, char *[]);
-static void _cmd_updateControl(int, char *[]);
+// static void _cmd_updateControl(int, char *[]);
 // static void _cmd_updateKalman(int, char *[]);
+static void _cmd_setVelocity(int, char *[]);
 static void _cmd_setReference(int, char *[]);
 
 // Modules that provide commands
@@ -45,8 +46,9 @@ static CMD_T cmd_table[] =
     {_cmd_getEncoderCount      , "getEncoder"   , ""              , "Displays the potentiometer voltage level."} ,
     {_cmd_logEncData      , "logEnc"    , ""              , "Logs 5 seconds of encoder data."} ,
     /*{_cmd_logIMUData      , "logIMU"    , ""              , "Logs 5 seconds of IMU data."} ,*/
-    {_cmd_updateControl  , "getControl"   , "[x1,x2]"              , "Updates Control"} ,
+    // {_cmd_updateControl  , "getControl"   , "[x1,x2]"              , "Updates Control"} ,
    /* {_cmd_updateKalman  , "getKalman"   , "[angle,vel]"              , "Runs through an iteration of the Kalman filter"} ,*/
+    {_cmd_setVelocity  , "setVel"   , "[vel]"              , "Sets target for motor velocity in rad/s"} ,
     {_cmd_setReference  , "setRef"   , "[yref]"              , "Sets velocity reference"} ,
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
@@ -54,6 +56,20 @@ enum {CMD_MAX_TOKENS = 5};      // Maximum number of tokens to process (command 
 
 // Command function definitions
 static void _cmd_setReference(int argc, char *argv[])
+{
+    /* TODO: Supress compiler warnings for unused arguments */
+    if(argc != 2)
+        {
+            printf("Incorrect arguments\n");
+        }
+    else
+    {
+        control_set_speed(atof(argv[1]));
+        printf("%f\n", getReference());
+    }
+}
+
+static void _cmd_setVelocity(int argc, char *argv[])
 {
     /* TODO: Supress compiler warnings for unused arguments */
     if(argc != 2)
@@ -84,22 +100,22 @@ static void _cmd_setReference(int argc, char *argv[])
 //     printf("%f\n", getKalmanBias());
 //     }
 // }
-static void _cmd_updateControl(int argc, char *argv[])
-{
-    /* TODO: Supress compiler warnings for unused arguments */
-    if(argc != 3)
-        {
-            printf("Incorrect arguments\n");
-        }
-    else
-    {  
-        ctrl_set_x1(atof(argv[1]));
-        ctrl_set_x2(atof(argv[2]));
+// static void _cmd_updateControl(int argc, char *argv[])
+// {
+//     /* TODO: Supress compiler warnings for unused arguments */
+//     if(argc != 3)
+//         {
+//             printf("Incorrect arguments\n");
+//         }
+//     else
+//     {  
+//         ctrl_set_x1(atof(argv[1]));
+//         ctrl_set_x2(atof(argv[2]));
     
-    ctrl_update();
-    printf("%f\n", getControl());
-    }
-}
+//     ctrl_update();
+//     printf("%f\n", getControl());
+//     }
+// }
 static void _cmd_logEncData(int argc, char *argv[])
 {
     /* TODO: Supress compiler warnings for unused arguments */

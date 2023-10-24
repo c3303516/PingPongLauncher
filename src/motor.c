@@ -30,6 +30,14 @@ osTimerAttr_t   _comms_report_timer_attr =
     .name = "commsReportTimer"
 };
 
+// Time to update velocity and reference reports
+// void comms_loop_init(void)  
+//  { 
+//      /* TODO: Initialise timer for use with pendulum data logging */
+//      _comms_report_timer_id = osTimerNew(comms_update, osTimerPeriodic, NULL, & _comms_report_timer_attr);
+//     //  _kalman_timer_id = osTimerNew(kalman_loop_update, osTimerPeriodic, NULL, &_kalman_timer_attr);
+//  }
+
  void motor_PWM_init(void)
  {
  /*  Enable TIM3 clock */
@@ -48,7 +56,7 @@ osTimerAttr_t   _comms_report_timer_attr =
         GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
         HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-// DIR PIN INIT
+// DIR PIN INIT / PHase pin init
 	GPIO_InitTypeDef GPIO_InitStruct2;
 	GPIO_InitStruct2.Pin = GPIO_PIN_5;		//PB5
 	GPIO_InitStruct2.Mode = GPIO_MODE_OUTPUT_PP;
@@ -79,37 +87,13 @@ osTimerAttr_t   _comms_report_timer_attr =
    HAL_TIM_PWM_Start(&_htim3, TIM_CHANNEL_1);
  }
 
-// void direction_adjust(float vel)
-// {   int i = 0;
-//     __HAL_TIM_SET_COMPARE(&_htim3, TIM_CHANNEL_1, TIMERPERIOD/2);  //these 'turn on' velocity
-//     __HAL_TIM_SET_COMPARE(&_htim3, TIM_CHANNEL_2, TIMERPERIOD/2);
-//     if (vel > 0.05){
-//     HAL_GPIO_WritePin(GPIOC,GPIO_PIN_8,GPIO_PIN_SET);
-//     HAL_GPIO_WritePin(GPIOC,GPIO_PIN_6,GPIO_PIN_RESET);
-//     i = 1;
-//     }
-//     else{
-//      if (vel < -0.05){
-//         HAL_GPIO_WritePin(GPIOC,GPIO_PIN_8,GPIO_PIN_RESET);
-//         HAL_GPIO_WritePin(GPIOC,GPIO_PIN_6,GPIO_PIN_SET);
-//         i = 2;
-//         }
-//         else{
-//         __HAL_TIM_SET_COMPARE(&_htim3, TIM_CHANNEL_1, 0);  
-//         __HAL_TIM_SET_COMPARE(&_htim3, TIM_CHANNEL_2, 0);
-//         i = 3;
-//         }
-//     }
-//     //printf("dir = %0.1d\n", i);
-// }
 
 
 void velocity_adjust(float thrust)
 {
     //try to keep 200Hz to motors
     HAL_GPIO_WritePin(GPIOB,GPIO_PIN_5,GPIO_PIN_SET);		//output of dire pin
-	dutycycle = (TIMERPERIOD/100)*thrust;		//100 takes thrust percentage and makes it decimal
-
+	dutycycle = (TIMERPERIOD)*thrust;	
 	__HAL_TIM_SET_COMPARE(&_htim3, TIM_CHANNEL_1, (uint32_t)dutycycle);
 
     // printf("set velocity %f\n", dutycycle);

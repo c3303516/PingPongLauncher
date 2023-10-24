@@ -11,6 +11,7 @@
  float motor_encoder_getAngle(int32_t);
 //  void direction_adjust(float);
 //  int microstep(float v);
+// void comms_loop_init(void)
 void velocity_adjust(float);
 
 #endif
