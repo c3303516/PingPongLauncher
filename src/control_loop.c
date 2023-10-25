@@ -14,6 +14,7 @@
 
 
 #define FREQ 100      //period of control loop in seconds
+#define INPUTMAX 100000
 
 float angle;
 float velocity;
@@ -35,6 +36,7 @@ static float errorold = 0;
 static float errornew = 0;
 static float erri = 0;
 static float derr = 0;
+static float input = 0;
 int i = 0;
 
 static void control_loop_update(void *arg);
@@ -58,6 +60,8 @@ void control_loop_init(void)
      /* TODO: Initialise timer for use with pendulum data logging */
      _control_timer_id = osTimerNew(control_loop_update, osTimerPeriodic, NULL, &_control_timer_attr);
     //  _kalman_timer_id = osTimerNew(kalman_loop_update, osTimerPeriodic, NULL, &_kalman_timer_attr);
+
+
  }
 // void kalman_timer_start(void)
 // {
@@ -106,22 +110,44 @@ void control_loop_update(void *arg)
     // find error
     enc1_t = motor_encoder_getValue();
     enc1_diff = enc1_t - enc1_t1;
-    angvel = motor_encoder_getAngle(enc1_diff)/(1./FREQ);    //find ang velocity
-
-    refvel = getReference();
-    // printf("referencevalue %0.1f\n", refvel);
-    errornew = refvel - angvel;
-
-    derr = (errornew - errorold)/(1./FREQ);      //find derr/dt
-    erri = (errornew - errorold)*(1./FREQ);      //find approx integral. maybe adjust this later
-
     if (enc1_diff < 0){     //wrap around consideration for encodr count
         enc1_diff = enc1_diff + 2147483647;
     }
+    angvel = motor_encoder_getAngle(enc1_diff)/(1./FREQ);    //find ang velocity
+
+
+    refvel = getReference();
+    printf("referencevalue %0.1f\n", refvel);
+    errornew = refvel - angvel;
+
+    if ((angvel == 0 )&&(refvel == 0 )){
+        erri = 0;       //clear integrator
+    }
+
+
+    derr = (errornew - errorold)/(1./FREQ);      //find derr/dt
+    erri = erri + 0.5*(errornew + errorold)*(1./FREQ);      //find approx integral. maybe adjust this later
+
+    //try simpsons rule, assuming linear over timestep
+
+    // erri = erri + (1./FREQ)*(1/3)*(errorold + 2*(errornew+errorold) + errornew);
+
+
     ctrl_update(errornew, erri, derr);      //update control
-    thrustpercent = getControl()/65535;
+
+    input = getControl();       //max value will be 100 0000
     
-    printf("thrust %0.5f\n", thrustpercent);
+    printf("controlinput %0.5f\n",input);
+
+    if (input < 0 ){
+        input = 0;
+    } else if (input > INPUTMAX){
+        input = INPUTMAX;        //saturate the percentage
+    }
+
+    thrustpercent = input;
+
+    // printf("thrust %0.5f\n", thrustpercent);
     velocity_adjust(thrustpercent);     //apply new velocity
 
     printf("motor vel %0.1f\n", angvel);

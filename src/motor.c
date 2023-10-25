@@ -93,7 +93,8 @@ void velocity_adjust(float thrust)
 {
     //try to keep 200Hz to motors
     HAL_GPIO_WritePin(GPIOB,GPIO_PIN_5,GPIO_PIN_SET);		//output of dire pin
-	dutycycle = (TIMERPERIOD)*thrust;	
+	// dutycycle = (TIMERPERIOD)*thrust;	
+    dutycycle = thrust;	
 	__HAL_TIM_SET_COMPARE(&_htim3, TIM_CHANNEL_1, (uint32_t)dutycycle);
 
     // printf("set velocity %f\n", dutycycle);

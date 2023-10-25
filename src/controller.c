@@ -21,9 +21,16 @@ int numits,numadd,numdrop;
 //Feedforward arrays
 int i;
 
-static float Kp = 200;    //launcher motor constants. might be for 150Hz measuring ubt hey
-static float Ki = 500;
+//his constants
+// static float Kp = 200;    //launcher motor constants. might be for 150Hz measuring ubt hey
+// static float Ki = 500;
+// static float Kd = 0;
+
+static float Kp = 30;    
+static float Ki = 10;
 static float Kd = 0;
+
+
 
 static float yref = 0;
 
