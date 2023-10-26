@@ -113,7 +113,7 @@ void control_loop_update(void *arg)
     if (enc1_diff < 0){     //wrap around consideration for encodr count
         enc1_diff = enc1_diff + 2147483647;
     }
-    angvel = motor_encoder_getAngle(enc1_diff)/(1./FREQ);    //find ang velocity
+    angvel = motor_encoder_getRev(enc1_diff)/(1./FREQ);    //find ang velocity, in RPS
 
 
     refvel = getReference();
@@ -121,7 +121,9 @@ void control_loop_update(void *arg)
     errornew = refvel - angvel;
 
     if ((angvel == 0 )&&(refvel == 0 )){
-        erri = 0;       //clear integrator
+        errornew = 0;
+        erri = 0;       //clear all control
+        derr = 0;
     }
 
 
@@ -135,7 +137,8 @@ void control_loop_update(void *arg)
 
     ctrl_update(errornew, erri, derr);      //update control
 
-    input = getControl();       //max value will be 100 0000
+    input = input + getControl();       //max value will be 100 0000. Input will always be positive now. Controller will
+                                        //adjust it
     
     printf("controlinput %0.5f\n",input);
 
@@ -143,8 +146,10 @@ void control_loop_update(void *arg)
         input = 0;
     } else if (input > INPUTMAX){
         input = INPUTMAX;        //saturate the percentage
+        erri = 0;       //cleear
     }
-
+ 
+ 
     thrustpercent = input;
 
     // printf("thrust %0.5f\n", thrustpercent);

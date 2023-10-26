@@ -212,3 +212,13 @@ float motor_encoder_getAngle(int32_t cnt)
         return angle;
     }
 
+float motor_encoder_getRev(int32_t cnt)
+    {
+        // int32_t cnt = motor_encoder_getValue();
+
+        // 12 * gear ratio, in this case 5.
+
+        float angle = cnt/(12*4.995);          //convert encoder count to radians. Check this stuff at the bottom
+        return angle;
+    }
+
