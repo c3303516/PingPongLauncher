@@ -15,7 +15,7 @@ int numits,numadd,numdrop;
 #define u_max 15*M_PI
 #define delta_u_min -0.5*M_PI
 #define delta_u_max 0.5*M_PI
-#define T 0.01
+#define T 0.1
 
 /* Define control arrays */
 //Feedforward arrays
@@ -27,7 +27,7 @@ int i;
 // static float Kd = 0;
 
 static float Kp = 30;    
-static float Ki = 10;
+static float Ki = 30;
 static float Kd = 0;
 
 

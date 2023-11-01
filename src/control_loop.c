@@ -13,7 +13,7 @@
 #include "dummy_task.h"
 
 
-#define FREQ 100      //period of control loop in seconds
+#define FREQ 10      //period of control loop in seconds
 #define INPUTMAX 100000
 
 float angle;
@@ -37,6 +37,7 @@ static float errornew = 0;
 static float erri = 0;
 static float derr = 0;
 static float input = 0;
+static float ubar = 0;
 int i = 0;
 
 static void control_loop_update(void *arg);
@@ -117,6 +118,11 @@ void control_loop_update(void *arg)
 
 
     refvel = getReference();
+
+    //35 is 20 000 input, for the 5V
+    ubar = 20000*(refvel/35);       // approximate linearly from ref
+
+
     printf("referencevalue %0.1f\n", refvel);
     errornew = refvel - angvel;
 
@@ -137,20 +143,25 @@ void control_loop_update(void *arg)
 
     ctrl_update(errornew, erri, derr);      //update control
 
-    input = input + getControl();       //max value will be 100 0000. Input will always be positive now. Controller will
+    input = getControl();       //max value will be 100 0000. Input will always be positive now. Controller will
                                         //adjust it
     
-    printf("controlinput %0.5f\n",input);
 
-    if (input < 0 ){
-        input = 0;
-    } else if (input > INPUTMAX){
-        input = INPUTMAX;        //saturate the percentage
+
+ 
+ 
+ 
+    thrustpercent = ubar + input;           // this will allow negative inptus
+
+    printf("controlinput %0.5f\n",thrustpercent);
+
+    //saturation tests
+    if (thrustpercent< 0 ){
+        thrustpercent = 0;
+    } else if (thrustpercent > INPUTMAX){
+        thrustpercent = INPUTMAX;        //saturate the percentage
         erri = 0;       //cleear
     }
- 
- 
-    thrustpercent = input;
 
     // printf("thrust %0.5f\n", thrustpercent);
     velocity_adjust(thrustpercent);     //apply new velocity

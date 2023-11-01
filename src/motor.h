@@ -14,5 +14,6 @@
 //  int microstep(float v);
 // void comms_loop_init(void)
 void velocity_adjust(float);
+void elevation_adjust(float);
 
 #endif
