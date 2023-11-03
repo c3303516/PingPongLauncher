@@ -98,6 +98,7 @@ void dummy_task_update(void *arg)
         // thrustpercent = 10;
         // velocity_adjust(thrustpercent);
         // osDelay(2000);
+        aim_timer_start();
         
         dummy_task_stop();
     }

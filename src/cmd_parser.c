@@ -33,6 +33,7 @@ static void _cmd_logEncData(int, char *[]);
 // static void _cmd_updateKalman(int, char *[]);
 static void _cmd_setVelocity(int, char *[]);
 static void _cmd_setReference(int, char *[]);
+static void _cmd_setElevation(int, char *[]);
 
 // Modules that provide commands
 #include "heartbeat_cmd.h"
@@ -50,6 +51,7 @@ static CMD_T cmd_table[] =
    /* {_cmd_updateKalman  , "getKalman"   , "[angle,vel]"              , "Runs through an iteration of the Kalman filter"} ,*/
     {_cmd_setVelocity  , "setVel"   , "[vel]"              , "Sets target for motor velocity in rad/s"} ,
     {_cmd_setReference  , "setRef"   , "[yref]"              , "Sets velocity reference"} ,
+    {_cmd_setElevation  , "setEle"   , "[phiref]"              , "Sets Elevation reference"} ,
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
 enum {CMD_MAX_TOKENS = 5};      // Maximum number of tokens to process (command + arguments)
@@ -66,6 +68,20 @@ static void _cmd_setReference(int argc, char *argv[])
     {
         control_set_speed(atof(argv[1]));
         printf("%f\n", getReference());
+    }
+}
+
+static void _cmd_setElevation(int argc, char *argv[])
+{
+    /* TODO: Supress compiler warnings for unused arguments */
+    if(argc != 2)
+        {
+            printf("Incorrect arguments\n");
+        }
+    else
+    {
+        control_set_elevation(atof(argv[1]));
+        printf("%f\n", getElevation());
     }
 }
 

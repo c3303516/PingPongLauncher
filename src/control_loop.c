@@ -24,6 +24,9 @@ float ang_momentum;
 float refvel = 0;
 float speed = 0;
 float thrustpercent;
+float Elepercent;
+float refEle = 0;
+float Ele = 0;
 
 int32_t enc1_t=0;
 int32_t enc2_t= 0;
@@ -32,6 +35,7 @@ int32_t enc1_t1 = 0;
 int32_t enc2_t1= 0;
 int32_t enc3_t1= 0;
 int32_t enc1_diff;
+
 static float errorold = 0;
 static float errornew = 0;
 static float erri = 0;
@@ -39,6 +43,14 @@ static float derr = 0;
 static float input = 0;
 static float ubar = 0;
 int i = 0;
+
+float Ele_old = 0;
+float Ele_new = 0;
+static float Ele_errorold = 0;
+static float Ele_errornew = 0;
+static float Ele_erri = 0;
+static float Ele_derr = 0;
+static float ele_input = 0;
 
 static void control_loop_update(void *arg);
 static osTimerId_t _control_timer_id;
@@ -53,6 +65,13 @@ static osTimerAttr_t _control_timer_attr =
 //     .name = "kalmanTimer"
 // };
 
+static void aim_loop_update(void *arg);
+static osTimerId_t _aim_timer_id;
+static osTimerAttr_t _aim_timer_attr =
+{
+    .name = "aimTimer"
+};
+
 static uint8_t _is_running = 0;
 static uint8_t _is_init = 0;
 
@@ -61,8 +80,14 @@ void control_loop_init(void)
      /* TODO: Initialise timer for use with pendulum data logging */
      _control_timer_id = osTimerNew(control_loop_update, osTimerPeriodic, NULL, &_control_timer_attr);
     //  _kalman_timer_id = osTimerNew(kalman_loop_update, osTimerPeriodic, NULL, &_kalman_timer_attr);
+ }
 
 
+ void aim_loop_init(void)  
+ { 
+     /* TODO: Initialise timer for use with pendulum data logging */
+     _aim_timer_id = osTimerNew(aim_loop_update, osTimerPeriodic, NULL, &_aim_timer_attr);
+    //  _kalman_timer_id = osTimerNew(kalman_loop_update, osTimerPeriodic, NULL, &_kalman_timer_attr);
  }
 // void kalman_timer_start(void)
 // {
@@ -85,6 +110,19 @@ void control_timer_start(void)
 void control_timer_stop(void)
 {
     osTimerStop(_control_timer_id);
+}
+
+void aim_timer_start(void)
+{
+    int delay = 1000/FREQ;
+    // int delay = 5000;
+    printf("started\n");
+    osTimerStart(_aim_timer_id,delay);
+}
+
+void aim_timer_stop(void)
+{
+    osTimerStop(_aim_timer_id);
 }
 
 void control_set_speed(float spd)
@@ -122,8 +160,7 @@ void control_loop_update(void *arg)
     //35 is 20 000 input, for the 5V
     ubar = 20000*(refvel/35);       // approximate linearly from ref
 
-
-    printf("referencevalue %0.1f\n", refvel);
+    // printf("referencevalue %0.1f\n", refvel);
     errornew = refvel - angvel;
 
     if ((angvel == 0 )&&(refvel == 0 )){
@@ -132,28 +169,20 @@ void control_loop_update(void *arg)
         derr = 0;
     }
 
-
     derr = (errornew - errorold)/(1./FREQ);      //find derr/dt
     erri = erri + 0.5*(errornew + errorold)*(1./FREQ);      //find approx integral. maybe adjust this later
 
     //try simpsons rule, assuming linear over timestep
-
     // erri = erri + (1./FREQ)*(1/3)*(errorold + 2*(errornew+errorold) + errornew);
-
 
     ctrl_update(errornew, erri, derr);      //update control
 
     input = getControl();       //max value will be 100 0000. Input will always be positive now. Controller will
                                         //adjust it
     
-
-
- 
- 
- 
     thrustpercent = ubar + input;           // this will allow negative inptus
 
-    printf("controlinput %0.5f\n",thrustpercent);
+    // printf("controlinput %0.5f\n",thrustpercent);
 
     //saturation tests
     if (thrustpercent< 0 ){
@@ -166,9 +195,33 @@ void control_loop_update(void *arg)
     // printf("thrust %0.5f\n", thrustpercent);
     velocity_adjust(thrustpercent);     //apply new velocity
 
-    printf("motor vel %0.1f\n", angvel);
+    // printf("motor vel %0.1f\n", angvel);
 
     enc1_t1 = enc1_t;       //update encoder count
     errorold = errornew;
+
+
+
 }
 
+void aim_loop_update(void *arg)
+{   UNUSED(arg);
+    Ele_new = elevation_encoder_getAngle(ele_encoder_getValue());
+    refEle = getElevation();
+    
+    Ele_errornew = refEle - Ele_new;        //find error
+
+    Ele_derr = (Ele_errornew - Ele_errorold)/(1./FREQ);      //find derr/dt
+    Ele_erri = Ele_erri + 0.5*(Ele_errornew + Ele_errorold)*(1./FREQ);      //find approx integral. maybe adjust this later
+
+    ele_ctrl_update(Ele_errornew, Ele_erri, Ele_derr);      //update control
+    ele_input = getEleControl(); 
+    elevation_adjust(ele_input);
+
+
+    printf("ElevationRef %0.2f\n", refEle);
+    printf("ControlINput %0.2f\n", ele_input);
+    printf("Elevation %0.2f\n", Ele_new);
+    Ele_old = Ele_new;
+    Ele_errorold = Ele_errornew;
+}

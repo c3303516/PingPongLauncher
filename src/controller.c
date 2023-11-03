@@ -30,12 +30,17 @@ static float Kp = 30;
 static float Ki = 30;
 static float Kd = 0;
 
+static float ele_Kp = 3000;    
+static float ele_Ki = 5000;
+static float ele_Kd = 1000;
 
 
+static float elevation = 0;
 static float yref = 0;
 
 
 static float u;
+static float u_ele;
 
 
  void ctrl_init(void)
@@ -51,6 +56,10 @@ float getControl(void)
     return u;
 }
 
+float getEleControl(void)
+{
+    return u_ele;
+}
 
 void ctrl_set_yref(float y)
 {
@@ -62,8 +71,26 @@ float getReference(void)
     return yref;
 }
 
+float getElevation(void)
+{
+    return elevation;
+}
+
+void control_set_elevation(float ele)
+{
+    elevation = ele;
+}
+
+
 /* Update control output */
- void ctrl_update(float err, float err_i, float err_d)
- {
-    u = Kp*err +Ki*err_i + Kd*err_d;
- }
+void ctrl_update(float err, float err_i, float err_d)
+{
+u = Kp*err +Ki*err_i + Kd*err_d;
+// return u;
+}
+
+void ele_ctrl_update(float err, float err_i, float err_d)
+{
+u_ele = ele_Kp*err + ele_Ki*err_i + ele_Kd*err_d;
+// return u;
+}

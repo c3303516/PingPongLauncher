@@ -10,4 +10,8 @@ void kalman_timer_start(void);
 void kalman_timer_stop(void);
 void control_set_speed(float);
 
+void aim_timer_start(void);
+void aim_timer_stop(void);
+void aim_loop_init(void);
+
 #endif

@@ -15,8 +15,12 @@ static TIM_OC_InitTypeDef _sConfigPULSE;
 #endif
 
 static int32_t enc_count;
+static int32_t ele_enc_count;
+static float ele_dutycycle;
 static uint8_t _is_init = 0;
 static float dutycycle;
+
+static float ele_duty;
 
 int32_t PB3 = 0;
 int32_t PC3 = 0;
@@ -57,7 +61,7 @@ osTimerAttr_t   _comms_report_timer_attr =
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     GPIO_InitTypeDef GPIO_InitStruct3;
-    GPIO_InitStruct3.Pin = GPIO_PIN_7;       //motor 1
+    GPIO_InitStruct3.Pin = GPIO_PIN_7;       //elevation
     GPIO_InitStruct3.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct3.Pull = GPIO_NOPULL;
     GPIO_InitStruct3.Speed = GPIO_SPEED_FREQ_HIGH;
@@ -72,7 +76,7 @@ osTimerAttr_t   _comms_report_timer_attr =
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct2);
 
     GPIO_InitTypeDef GPIO_InitStruct5;
-	GPIO_InitStruct5.Pin = GPIO_PIN_14;		//PB14
+	GPIO_InitStruct5.Pin = GPIO_PIN_14;		//PB14 for elevation
 	GPIO_InitStruct5.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct5.Pull = GPIO_PULLDOWN;
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct5);
@@ -99,6 +103,8 @@ osTimerAttr_t   _comms_report_timer_attr =
     /* Set initial Timer 3, channel 1 compare value */
     /* Start Timer 3, channel 1 */
    HAL_TIM_PWM_Start(&_htim3, TIM_CHANNEL_1);
+   
+   HAL_TIM_PWM_Start(&_htim3, TIM_CHANNEL_2);
  }
 
 
@@ -115,21 +121,23 @@ void velocity_adjust(float thrust)
 }
 
 
-
 void elevation_adjust(float lift)
 {
-
+    ele_duty = lift;
     if (lift < 0){
-        HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);
-        lift = fabs(lift);     //adjust for direction
-    } else{
-        HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);		//output of dire pin
-    }
+        HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
+        ele_dutycycle = fabs(ele_duty);     //adjust for direction
+    } else
+        if (lift > 0) {
+            HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);		//output of dire pin
+            ele_dutycycle = ele_duty;	
+        }
+        else{
+            ele_dutycycle = 0;
+        }
    // dutycycle = (TIMERPERIOD)*thrust;	
-    dutycycle = lift;	
-	__HAL_TIM_SET_COMPARE(&_htim3, TIM_CHANNEL_2, (uint32_t)dutycycle);
-
-
+    
+	__HAL_TIM_SET_COMPARE(&_htim3, TIM_CHANNEL_2, (uint32_t)ele_dutycycle);
 }
 
 
@@ -157,9 +165,9 @@ void elevation_adjust(float lift)
         GPIO_InitStruct2.Mode = GPIO_MODE_IT_RISING_FALLING;
         GPIO_InitStruct2.Pull = GPIO_NOPULL;
         GPIO_InitStruct2.Speed = GPIO_SPEED_FREQ_HIGH;
-        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct2);
+        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct2);        //PB3
 
-        HAL_GPIO_Init(GPIOC, &GPIO_InitStruct2);
+        HAL_GPIO_Init(GPIOC, &GPIO_InitStruct2);        //PC3
  /* TODO: Set priority of external interrupt lines 0,1 to 0x0f, 0x0f
  To find the IRQn_Type definition see "MCHA3500 Windows Toolchain\workspace\STM32Cube_F4_FW\Drivers\
 CMSIS\Device\ST\STM32F4xx\Include\stm32f446xx.h" */
@@ -208,10 +216,10 @@ void EXTI0_IRQHandler(void) {
 /* TODO: Check if PC0 == PC1. Adjust encoder count accordingly. */
     if ((HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0)) == (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_1)))
         {
-        enc_count++;
+        ele_enc_count++;
         }
     else{
-        enc_count--;
+        ele_enc_count--;
         }
 
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
@@ -221,10 +229,10 @@ void EXTI1_IRQHandler(void) {
 /* TODO: Check if PC0 == PC1. Adjust encoder count accordingly. */
     if ((HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0)) == (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_1)))
         {
-        enc_count--;
+        ele_enc_count--;
         } 
     else{
-        enc_count++;
+        ele_enc_count++;
         }
  /* TODO: Reset interrupt */
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
@@ -233,6 +241,11 @@ void EXTI1_IRQHandler(void) {
  int32_t motor_encoder_getValue(void)
     {
         return enc_count;
+    }
+
+int32_t ele_encoder_getValue(void)
+    {
+        return ele_enc_count;
     }
 
 
@@ -256,3 +269,12 @@ float motor_encoder_getRev(int32_t cnt)
         return angle;
     }
 
+float  elevation_encoder_getAngle(int32_t elcnt)
+    {
+        // int32_t cnt = motor_encoder_getValue();
+
+        // 14 cpr * gear ratio of 298.
+
+        float angle = 2*M_PI*elcnt/(14*298);          //convert encoder count to radians. Check this stuff at the bottom
+        return angle;
+    }

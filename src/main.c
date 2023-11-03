@@ -36,6 +36,7 @@ int main(void)
     ctrl_init();
     kalman_init();
     control_loop_init();
+    aim_loop_init();
 
     // Initialise task modules
     heartbeat_task_init();
