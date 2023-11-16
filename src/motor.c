@@ -6,7 +6,11 @@
 #include "uart.h"
 #include "motor.h"
 
+static TIM_HandleTypeDef _htim2;
 static TIM_HandleTypeDef _htim3;
+static TIM_HandleTypeDef _htim4;
+static TIM_HandleTypeDef _htim8;
+
 static TIM_OC_InitTypeDef _sConfigPULSE;
 #define TIMERPERIOD 100000        //1kHz signal
 #define BASECLKFREQ  100000000
@@ -24,21 +28,22 @@ static float dutycycle;
 
 static float ele_duty;
 
-int32_t PB3 = 0;
-int32_t PC3 = 0;
-int32_t PB3old = 0;
-int32_t PC3old = 0;
 
-int32_t PB12 = 0;
-int32_t PA12 = 0;
-int32_t PB12old = 0;
-int32_t PA12old = 0;
+// pin variables for the launhcer encoders
+int32_t PC10 = 0;
+int32_t PC11 = 0;
+int32_t PC10old = 0;
+int32_t PC11old = 0;
 
-
-int32_t PA5 = 0;
 int32_t PC5 = 0;
-int32_t PA5old = 0;
+int32_t PA5 = 0;
 int32_t PC5old = 0;
+int32_t PA5old = 0;
+
+int32_t PC8 = 0;
+int32_t PC9 = 0;
+int32_t PC8old = 0;
+int32_t PC9old = 0;
 
 
 
@@ -73,14 +78,30 @@ osTimerAttr_t   _comms_report_timer_attr =
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
+
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    GPIO_InitTypeDef GPIO_InitStruct;
+    GPIO_InitStruct.Pin = GPIO_PIN_10;       //motor 2
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    GPIO_InitTypeDef GPIO_InitStruct;
+    GPIO_InitStruct.Pin = GPIO_PIN_7;       //motor 3
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
     GPIO_InitTypeDef GPIO_InitStruct3;
     GPIO_InitStruct3.Pin = GPIO_PIN_7;       //elevation
     GPIO_InitStruct3.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct3.Pull = GPIO_NOPULL;
     GPIO_InitStruct3.Speed = GPIO_SPEED_FREQ_HIGH;
-    GPIO_InitStruct3.Alternate = GPIO_AF2_TIM3;
+    GPIO_InitStruct3.Alternate = GPIO_AF3_TIM8;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct3);
 
 // DIR PIN INIT / PHase pin init    for launchers
@@ -91,7 +112,7 @@ osTimerAttr_t   _comms_report_timer_attr =
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct2);
 
     GPIO_InitTypeDef GPIO_InitStruct5;
-	GPIO_InitStruct5.Pin = GPIO_PIN_14;		//PB14 for elevation
+	GPIO_InitStruct5.Pin = GPIO_PIN_13|GPIO_PIN_14;		//PB13 for azimuth, PB14 for elevation
 	GPIO_InitStruct5.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct5.Pull = GPIO_PULLDOWN;
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct5);
@@ -99,40 +120,74 @@ osTimerAttr_t   _comms_report_timer_attr =
 
  /*  Initialise timer 3 
 */
-    _htim3.Instance = TIM3;
-    _htim3.Init.Prescaler = 2; 
-    _htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-    _htim3.Init.Period = TIMERPERIOD/2;
-    _htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;;
-
 
     _sConfigPULSE.OCMode = TIM_OCMODE_PWM1;
     _sConfigPULSE.Pulse = 0; // delays the toggle relative to timer
     _sConfigPULSE.OCPolarity = TIM_OCPOLARITY_HIGH;
     _sConfigPULSE.OCFastMode = TIM_OCFAST_DISABLE;
 
+
+    _htim3.Instance = TIM3;
+    _htim3.Init.Prescaler = 2; 
+    _htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+    _htim3.Init.Period = TIMERPERIOD/2;
+    _htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;;
+
     HAL_TIM_PWM_Init(&_htim3);
     HAL_TIM_PWM_ConfigChannel(&_htim3, &_sConfigPULSE, TIM_CHANNEL_1);
     HAL_TIM_PWM_ConfigChannel(&_htim3, &_sConfigPULSE, TIM_CHANNEL_2);
 
+    _htim2.Instance = TIM2;
+    _htim2.Init.Prescaler = 2; 
+    _htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+    _htim2.Init.Period = TIMERPERIOD/2;
+    _htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;;
+
+    HAL_TIM_PWM_Init(&_htim2);
+    HAL_TIM_PWM_ConfigChannel(&_htim2, &_sConfigPULSE, TIM_CHANNEL_3);
+
+    _htim4.Instance = TIM4;
+    _htim4.Init.Prescaler = 2; 
+    _htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+    _htim4.Init.Period = TIMERPERIOD/2;
+    _htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;;
+
+    HAL_TIM_PWM_Init(&_htim4);
+    HAL_TIM_PWM_ConfigChannel(&_htim4, &_sConfigPULSE, TIM_CHANNEL_1);
+
+    _htim8.Instance = TIM8;
+    _htim8.Init.Prescaler = 2; 
+    _htim8.Init.CounterMode = TIM_COUNTERMODE_UP;
+    _htim8.Init.Period = TIMERPERIOD/2;
+    _htim8.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;;
+
+    HAL_TIM_PWM_Init(&_htim8);
+    HAL_TIM_PWM_ConfigChannel(&_htim8, &_sConfigPULSE, TIM_CHANNEL_2);
+
     /* Set initial Timer 3, channel 1 compare value */
     /* Start Timer 3, channel 1 */
    HAL_TIM_PWM_Start(&_htim3, TIM_CHANNEL_1);
-   
    HAL_TIM_PWM_Start(&_htim3, TIM_CHANNEL_2);
+   HAL_TIM_PWM_Start(&_htim2, TIM_CHANNEL_3);
+   HAL_TIM_PWM_Start(&_htim4, TIM_CHANNEL_1);
+   HAL_TIM_PWM_Start(&_htim8, TIM_CHANNEL_2);
  }
 
 
 
-void velocity_adjust(float thrust)
+void velocity_adjust(float thrust1,float thrust2,float thrust3)
 {
     //try to keep 200Hz to motors
     HAL_GPIO_WritePin(GPIOB,GPIO_PIN_5,GPIO_PIN_SET);		//output of dire pin
 	// dutycycle = (TIMERPERIOD)*thrust;	
-    dutycycle = thrust;	
+    dutycycle = thrust1;	
 	__HAL_TIM_SET_COMPARE(&_htim3, TIM_CHANNEL_1, (uint32_t)dutycycle);
 
     // printf("set velocity %f\n", dutycycle);
+    dutycycle = thrust2;	    //PB10
+	__HAL_TIM_SET_COMPARE(&_htim2, TIM_CHANNEL_3, (uint32_t)dutycycle);
+    dutycycle = thrust3;	    //pc7
+	__HAL_TIM_SET_COMPARE(&_htim8, TIM_CHANNEL_2, (uint32_t)dutycycle);
 }
 
 
@@ -170,71 +225,69 @@ void elevation_adjust(float lift)
 //  - No pull
 //  - High frequency */
 
+        // LAUNCHER MOTORS
         GPIO_InitTypeDef GPIO_InitStruct;
-        GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;       //init pin 0,1
+        GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11;       //PC10, PC11
         GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
         GPIO_InitStruct.Pull = GPIO_NOPULL;
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
         HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-        GPIO_InitTypeDef GPIO_InitStruct;           //encoder 1
-        GPIO_InitStruct.Pin = GPIO_PIN_12;       //init pin 12
-        GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-        GPIO_InitStruct.Pull = GPIO_NOPULL;
-        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-
-        GPIO_InitTypeDef GPIO_InitStruct2;       //encoder 3
-        GPIO_InitStruct2.Pin = GPIO_PIN_3;       //init pin 3
+        GPIO_InitTypeDef GPIO_InitStruct2;           
+        GPIO_InitStruct2.Pin = GPIO_PIN_5;                  //PA5, PC5
         GPIO_InitStruct2.Mode = GPIO_MODE_IT_RISING_FALLING;
         GPIO_InitStruct2.Pull = GPIO_NOPULL;
         GPIO_InitStruct2.Speed = GPIO_SPEED_FREQ_HIGH;
-        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct2);        //PB3
-        HAL_GPIO_Init(GPIOC, &GPIO_InitStruct2);        //PC3
+        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct2);     //PA12 PB12
+        HAL_GPIO_Init(GPIOc, &GPIO_InitStruct2);
+
+        GPIO_InitTypeDef GPIO_InitStruct3;
+        GPIO_InitStruct3.Pin = GPIO_PIN_8|GPIO_PIN_9;       //PC8, PC9
+        GPIO_InitStruct3.Mode = GPIO_MODE_IT_RISING_FALLING;
+        GPIO_InitStruct3.Pull = GPIO_NOPULL;
+        GPIO_InitStruct3.Speed = GPIO_SPEED_FREQ_HIGH;
+        HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+        //ELEVATION
+
+        GPIO_InitTypeDef GPIO_InitStruct;
+        GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3;        //PC2, PC3
+        GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+        HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+        //AZIMUTH
+
+
+ 
+
+
  /* TODO: Set priority of external interrupt lines 0,1 to 0x0f, 0x0f
  To find the IRQn_Type definition see "MCHA3500 Windows Toolchain\workspace\STM32Cube_F4_FW\Drivers\
 CMSIS\Device\ST\STM32F4xx\Include\stm32f446xx.h" */
 
 
 // CHANGE THESE BACK TO 0 and 1
-    HAL_NVIC_SetPriority(EXTI3_IRQn, 0x0f, 0x0f);
-    HAL_NVIC_SetPriority(EXTI0_IRQn, 0x0f, 0x0f);
     HAL_NVIC_SetPriority(EXTI1_IRQn, 0x0f, 0x0f);
+    HAL_NVIC_SetPriority(EXTI2_IRQn, 0x0f, 0x0f);
+    HAL_NVIC_SetPriority(EXTI3_IRQn, 0x0f, 0x0f);
+    HAL_NVIC_SetPriority(EXTI4_IRQn, 0x0f, 0x0f);
+    HAL_NVIC_SetPriority(EXTI5_IRQn, 0x0f, 0x0f);
     HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0x0f, 0x0f);
+    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0x0f, 0x0f);
 
  /* TODO: Enable external interrupt for lines 0, 1 */
-    HAL_NVIC_EnableIRQ(EXTI3_IRQn);
-    HAL_NVIC_EnableIRQ(EXTI0_IRQn);
     HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+    HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+    HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+    HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+    HAL_NVIC_EnableIRQ(EXTI5_IRQn);
     HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
  }
 
-void EXTI3_IRQHandler(void)     //First launcher
- {
-
-    PB3 = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_3);
-    PC3 = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_3);
-
-    if (PB3 != PB3old)
-        {
-        enc3_count++;
-        HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
-        }
-    if (PC3 != PC3old)
-        {
-        enc3_count++;
-        HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
-        }
-    
-    PB3old = PB3;
-    PC3old = PC3;
- /* TODO: Reset interrupt */
-    // HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
-
-}
 
 void EXTI5_IRQHandler(void)     //First launcher
  {
@@ -263,31 +316,56 @@ void EXTI5_IRQHandler(void)     //First launcher
 void EXTI9_5_IRQHandler(void)     //First launcher
  {
 
-    PA12 = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_12);
-    PB12 = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12);
+    PC8 = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8);
+    PC9 = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9);
 
-    if (PA12 != PA12old)
+    if (PC8 != PC8old)
         {
-        enc1_count++;
-        HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_12);
+        enc3_count++;
+        HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
         }
-    if (PB12 != PB12old)
+    if (PC9 != PC9old)
         {
-        enc1_count++;
-        HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_12);
+        enc3_count++;
+        HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_9);
         }
     
-    PA12old = PA12;    
-    PB12old = PB12;
+    PC8old = PC8;
+    PC9old = PC9;
  /* TODO: Reset interrupt */
     // HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
 
 }
 
 
-void EXTI0_IRQHandler(void) {       //attempting to link intterupst for elevation.
+void EXTI15_10_IRQHandler(void)     //First launcher
+ {
+
+    PC10 = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_10);
+    PC11 = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11);
+
+    if (PC10 != PC10old)
+        {
+        enc1_count++;
+        HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_10);
+        }
+    if (PC11 != PC11old)
+        {
+        enc1_count++;
+        HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_11);
+        }
+    
+    PC10old = PC10;    
+    PC11old = PC11;
+ /* TODO: Reset interrupt */
+    // HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
+
+}
+
+///////////////////////////// HANDLERS IN CHARGE OF AZIMUTH///////////////////////
+void EXTI1_IRQHandler(void) {       
 /* TODO: Check if PC0 == PC1. Adjust encoder count accordingly. */
-    if ((HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0)) == (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_1)))
+    if ((HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1)) == (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_4)))
         {
         ele_enc_count++;
         }
@@ -295,14 +373,12 @@ void EXTI0_IRQHandler(void) {       //attempting to link intterupst for elevatio
         ele_enc_count--;
         }
 
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
     }
 
-
-
-void EXTI1_IRQHandler(void) {
+void EXTI4_IRQHandler(void) {
 /* TODO: Check if PC0 == PC1. Adjust encoder count accordingly. */
-    if ((HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0)) == (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_1)))
+    if ((HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1)) == (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_4)))
         {
         ele_enc_count--;
         } 
@@ -310,12 +386,41 @@ void EXTI1_IRQHandler(void) {
         ele_enc_count++;
         }
  /* TODO: Reset interrupt */
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
  }
+
+
+////////////////////////////// HANDLERS IN CHARGE OF ELEVATION //////////////
+void EXTI2_IRQHandler(void) {       
+    if ((HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_2)) == (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_3)))
+        {
+        ele_enc_count++;
+        }
+    else{
+        ele_enc_count--;
+        }
+
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
+    }
+
+void EXTI3_IRQHandler(void) {
+    if ((HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_2)) == (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_3)))
+        {
+        ele_enc_count--;
+        } 
+    else{
+        ele_enc_count++;
+        }
+ /* TODO: Reset interrupt */
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
+ }
+
+
+
 
  int32_t motor_encoder_getValue(void)
     {
-        return enc_count;
+        return enc1_count,enc2_count,enc3_count;
     }
 
 int32_t ele_encoder_getValue(void)

@@ -17,13 +17,10 @@
 #define INPUTMAX 100000/2
 
 float angle;
-float velocity;
-float angvel;
 float u = 0;
 float ang_momentum;
 float refvel = 0;
 float speed = 0;
-float thrustpercent;
 float Elepercent;
 float refEle = 0;
 float newrefEle = 0;
@@ -36,14 +33,37 @@ int32_t enc1_t1 = 0;
 int32_t enc2_t1= 0;
 int32_t enc3_t1= 0;
 int32_t enc1_diff;
+int32_t enc2_diff;
+int32_t enc3_diff;
 
-
-static float errorold = 0;
-static float errornew = 0;
-static float erri = 0;
-static float derr = 0;
-static float input = 0;
 static float ubar = 0;          //verify this later
+
+static float error1old = 0;
+static float error1new = 0;
+static float erri1 = 0;
+static float derr1 = 0;
+static float input1 = 0;
+float angvel1;
+float thrustpercent1;
+
+static float error2old = 0;
+static float error2new = 0;
+static float erri2 = 0;
+static float derr2 = 0;
+static float input2 = 0;
+float angvel2;
+float thrustpercent2;
+
+static float error3old = 0;
+static float error3new = 0;
+static float erri3 = 0;
+static float derr3 = 0;
+static float input3 = 0;
+float angvel3;
+float thrustpercent3;
+
+
+
 int i = 0;
 
 float Ele_old = 0;
@@ -138,7 +158,7 @@ void kalman_loop_update(void *arg)  //kalman updates for calibration
 {       UNUSED(arg);
         IMU_read();
         angle = get_acc_angle();
-        angvel = get_gyroY();     //want angle of rotation about Y axis
+        // angvel = get_gyroY();     //want angle of rotation about Y axis
         // kalman_set_angle(angle);  
         // kalman_set_velocity(angvel);
         // kalman_update();          //update kalman
@@ -149,12 +169,24 @@ void control_loop_update(void *arg)
 {       UNUSED(arg);
 
     // find error
-    enc1_t = motor_encoder_getValue();
+    enc1_t,enc2_t,enc3_t = motor_encoder_getValue();
     enc1_diff = enc1_t - enc1_t1;
     if (enc1_diff < 0){     //wrap around consideration for encodr count
         enc1_diff = enc1_diff + 2147483647;
     }
-    angvel = motor_encoder_getRev(enc1_diff)/(1./FREQ);    //find ang velocity, in RPS
+    angvel1 = motor_encoder_getRev(enc1_diff)/(1./FREQ);    //find ang velocity, in RPS
+
+    enc2_diff = enc2_t - enc2_t1;
+    if (enc2_diff < 0){     //wrap around consideration for encodr count
+        enc2_diff = enc2_diff + 2147483647;
+    }
+    angvel2 = motor_encoder_getRev(enc2_diff)/(1./FREQ);    //find ang velocity, in RPS
+   
+    enc3_diff = enc3_t - enc3_t1;
+    if (enc3_diff < 0){     //wrap around consideration for encodr count
+        enc3_diff = enc3_diff + 2147483647;
+    }
+    angvel3 = motor_encoder_getRev(enc3_diff)/(1./FREQ);    //find ang velocity, in RPS
 
 
     refvel = getReference();
@@ -163,44 +195,78 @@ void control_loop_update(void *arg)
     ubar = 20000*(refvel/35);       // approximate linearly from ref
 
     // printf("referencevalue %0.1f\n", refvel);
-    errornew = refvel - angvel;
-
-    if ((angvel == 0 )&&(refvel == 0 )){
-        errornew = 0;
-        erri = 0;       //clear all control
-        derr = 0;
-    }
-
-    derr = (errornew - errorold)/(1./FREQ);      //find derr/dt might wrong here?
-    erri = erri + 0.5*(errornew + errorold)*(1./FREQ);      //find approx integral. maybe adjust this later
-
     //try simpsons rule, assuming linear over timestep
     // erri = erri + (1./FREQ)*(1/3)*(errorold + 2*(errornew+errorold) + errornew);
 
-    input = ctrl_update(errornew, erri, derr);      //update control
+    error1new = refvel - angvel1;
+    derr1 = (error1new - error1old)/(1./FREQ);      //find derr/dt might wrong here?
+    erri1 = erri1 + 0.5*(error1new + error1old)*(1./FREQ);      //find approx integral. maybe adjust this later
 
-    // input = getControl();       //max value will be 100 0000. Input will always be positive now. Controller will
-                                        //adjust it
-    
-    thrustpercent = ubar + input;           // this will allow negative inptus
+    if ((angvel1 == 0 )&&(refvel == 0 )){
+            error1new = 0;
+            erri1 = 0;       //clear all control
+            derr1 = 0;
+        }
+    input1 = ctrl_update(error1new, erri1, derr1);      //update control
+    thrustpercent = ubar + input1;           // this will allow negative inptus
+
+    error2new = refvel - angvel2;
+    derr2 = (error2new - error2old)/(1./FREQ);      //find derr/dt might wrong here?
+    erri2 = erri2 + 0.5*(error2new + error2old)*(1./FREQ);      //find approx integral. maybe adjust this later
+
+    if ((angvel2 == 0 )&&(refvel == 0 )){
+            error2new = 0;
+            erri2 = 0;       //clear all control
+            derr2 = 0;
+        }
+    input2 = ctrl_update(error2new, erri2, derr2);      //update control
+    thrustpercent2 = ubar + input2;           // this will allow negative inptus
+
+    error3new = refvel - angvel3;
+    derr3 = (error3new - error3old)/(1./FREQ);      //find derr/dt might wrong here?
+    erri3 = erri3 + 0.5*(error3new + error3old)*(1./FREQ);      //find approx integral. maybe adjust this later
+
+    if ((angvel3 == 0 )&&(refvel == 0 )){
+            error3new = 0;
+            erri3 = 0;       //clear all control
+            derr3 = 0;
+        }
+    input3 = ctrl_update(error3new, erri3, derr3);      //update control
+    thrustpercent3 = ubar + input3;           // this will allow negative inptus
 
     // printf("controlinput %0.5f\n",thrustpercent);
 
     //saturation tests
-    if (thrustpercent< 0 ){
-        thrustpercent = 0;
-    } else if (thrustpercent > INPUTMAX){
-        thrustpercent = INPUTMAX;        //saturate the percentage
-        erri = 0;       //cleear
+    if (thrustpercent1< 0 ){
+        thrustpercent1 = 0;
+    } else if (thrustpercent1 > INPUTMAX){
+        thrustpercent1 = INPUTMAX;        //saturate the percentage
+        erri1 = 0;       //cleear
+    }
+    if (thrustpercent2< 0 ){
+        thrustpercent2 = 0;
+    } else if (thrustpercent2 > INPUTMAX){
+        thrustpercent2 = INPUTMAX;        //saturate the percentage
+        erri2 = 0;       //cleear
+    }
+    if (thrustpercent3< 0 ){
+        thrustpercent3 = 0;
+    } else if (thrustpercent3 > INPUTMAX){
+        thrustpercent3 = INPUTMAX;        //saturate the percentage
+        erri3 = 0;       //cleear
     }
 
     // printf("thrust %0.5f\n", thrustpercent);
-    velocity_adjust(thrustpercent);     //apply new velocity
+    velocity_adjust(thrustpercent1,thrustpercent2,thrustpercent3);     //apply new velocity
 
     // printf("motor vel %0.1f\n", angvel);
 
     enc1_t1 = enc1_t;       //update encoder count
-    errorold = errornew;
+    error1old = error1new;
+    enc2_t1 = enc2_t;       //update encoder count
+    error2old = error2new;
+    enc3_t1 = enc3_t;       //update encoder count
+    error3old = error3new;
 
 
 
@@ -228,10 +294,10 @@ void aim_loop_update(void *arg)
 
     if (ele_input < (-1*INPUTMAX) ){
         ele_input = -INPUTMAX;
-        erri = 0;
+        Ele_erri = 0;
     } else if (ele_input > INPUTMAX){
         ele_input = INPUTMAX;        //saturate the percentage
-        erri = 0;       //cleear
+        Ele_erri = 0;      //cleear
     }
 
     // ele_input = 0;
