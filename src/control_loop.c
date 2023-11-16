@@ -14,7 +14,7 @@
 
 
 #define FREQ 10      //period of control loop in seconds
-#define INPUTMAX 100000
+#define INPUTMAX 100000/2
 
 float angle;
 float velocity;
@@ -26,6 +26,7 @@ float speed = 0;
 float thrustpercent;
 float Elepercent;
 float refEle = 0;
+float newrefEle = 0;
 float Ele = 0;
 
 int32_t enc1_t=0;
@@ -36,12 +37,13 @@ int32_t enc2_t1= 0;
 int32_t enc3_t1= 0;
 int32_t enc1_diff;
 
+
 static float errorold = 0;
 static float errornew = 0;
 static float erri = 0;
 static float derr = 0;
 static float input = 0;
-static float ubar = 0;
+static float ubar = 0;          //verify this later
 int i = 0;
 
 float Ele_old = 0;
@@ -169,15 +171,15 @@ void control_loop_update(void *arg)
         derr = 0;
     }
 
-    derr = (errornew - errorold)/(1./FREQ);      //find derr/dt
+    derr = (errornew - errorold)/(1./FREQ);      //find derr/dt might wrong here?
     erri = erri + 0.5*(errornew + errorold)*(1./FREQ);      //find approx integral. maybe adjust this later
 
     //try simpsons rule, assuming linear over timestep
     // erri = erri + (1./FREQ)*(1/3)*(errorold + 2*(errornew+errorold) + errornew);
 
-    ctrl_update(errornew, erri, derr);      //update control
+    input = ctrl_update(errornew, erri, derr);      //update control
 
-    input = getControl();       //max value will be 100 0000. Input will always be positive now. Controller will
+    // input = getControl();       //max value will be 100 0000. Input will always be positive now. Controller will
                                         //adjust it
     
     thrustpercent = ubar + input;           // this will allow negative inptus
@@ -206,8 +208,15 @@ void control_loop_update(void *arg)
 
 void aim_loop_update(void *arg)
 {   UNUSED(arg);
-    Ele_new = elevation_encoder_getAngle(ele_encoder_getValue());
-    refEle = getElevation();
+    // Ele_new = elevation_encoder_getAngle(ele_encoder_getValue());
+    Ele_new = ele_encoder_getValue();
+    newrefEle = 298*14*(getElevation());        //work on encoder count now?
+
+    if (newrefEle != refEle){
+        Ele_erri = 0;       //clear integrator 
+        refEle = newrefEle;
+    }
+
     
     Ele_errornew = refEle - Ele_new;        //find error
 
@@ -216,7 +225,20 @@ void aim_loop_update(void *arg)
 
     ele_ctrl_update(Ele_errornew, Ele_erri, Ele_derr);      //update control
     ele_input = getEleControl(); 
+
+    if (ele_input < (-1*INPUTMAX) ){
+        ele_input = -INPUTMAX;
+        erri = 0;
+    } else if (ele_input > INPUTMAX){
+        ele_input = INPUTMAX;        //saturate the percentage
+        erri = 0;       //cleear
+    }
+
+    // ele_input = 0;
+
     elevation_adjust(ele_input);
+    // elevation_adjust(refEle);
+
 
 
     printf("ElevationRef %0.2f\n", refEle);

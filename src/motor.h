@@ -5,9 +5,10 @@
 
  void motor_PWM_init(void);
  void motor_encoder_init(void);
- void EXTI0_IRQHandler(void);
+ void EXTI9_5_IRQHandler(void);
  void EXTI1_IRQHandler(void);
  void EXTI3_IRQHandler(void);
+ void EXTI5_IRQHandler(void);
  int32_t motor_encoder_getValue(void);
  float motor_encoder_getAngle(int32_t);
  float motor_encoder_getRev(int32_t);
