@@ -170,6 +170,7 @@ void control_loop_update(void *arg)
 
     // find error
     enc1_t,enc2_t,enc3_t = motor_encoder_getValue();
+    printf('Encoders %0.1f, %0.1f, %0.1f\n',enc1_t,enc2_t,enc3_t);
     enc1_diff = enc1_t - enc1_t1;
     if (enc1_diff < 0){     //wrap around consideration for encodr count
         enc1_diff = enc1_diff + 2147483647;
@@ -208,7 +209,7 @@ void control_loop_update(void *arg)
             derr1 = 0;
         }
     input1 = ctrl_update(error1new, erri1, derr1);      //update control
-    thrustpercent = ubar + input1;           // this will allow negative inptus
+    thrustpercent1 = ubar + input1;           // this will allow negative inptus
 
     error2new = refvel - angvel2;
     derr2 = (error2new - error2old)/(1./FREQ);      //find derr/dt might wrong here?
@@ -307,9 +308,9 @@ void aim_loop_update(void *arg)
 
 
 
-    printf("ElevationRef %0.2f\n", refEle);
-    printf("ControlINput %0.2f\n", ele_input);
-    printf("Elevation %0.2f\n", Ele_new);
+    // printf("ElevationRef %0.2f\n", refEle);
+    // printf("ControlINput %0.2f\n", ele_input);
+    // printf("Elevation %0.2f\n", Ele_new);
     Ele_old = Ele_new;
     Ele_errorold = Ele_errornew;
 }

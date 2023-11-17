@@ -9,7 +9,7 @@
  void EXTI2_IRQHandler(void);
  void EXTI3_IRQHandler(void);
  void EXTI4_IRQHandler(void);
- void EXTI5_IRQHandler(void);
+ void EXTI0_IRQHandler(void);
  void EXTI9_5_IRQHandler(void);
  void EXTI15_10_IRQHandler(void);
  int32_t motor_encoder_getValue(void);
@@ -18,7 +18,7 @@
 //  void direction_adjust(float);
 //  int microstep(float v);
 // void comms_loop_init(void)
-void velocity_adjust(float);
+void velocity_adjust(float,float,float);
 void elevation_adjust(float);
 float elevation_encoder_getAngle(int32_t);
 int32_t ele_encoder_getValue(void);

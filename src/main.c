@@ -31,8 +31,8 @@ int main(void)
     pendulum_init();
     motor_PWM_init();
     motor_encoder_init();
-    logging_init();
-	IMU_init();
+    // logging_init();
+	// IMU_init();
     ctrl_init();
     kalman_init();
     control_loop_init();

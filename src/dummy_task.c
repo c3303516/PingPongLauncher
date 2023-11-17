@@ -39,13 +39,13 @@ void dummy_task_init(void)
         _is_running = 1;
         _is_init = 1;
 
-        __HAL_RCC_GPIOC_CLK_ENABLE();
-        GPIO_InitTypeDef GPIO_InitStruct4;
-        GPIO_InitStruct4.Pin = GPIO_PIN_5;       //init pin 5
-        GPIO_InitStruct4.Mode = GPIO_MODE_INPUT;
-        GPIO_InitStruct4.Pull = GPIO_PULLDOWN;
-        //GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-        HAL_GPIO_Init(GPIOC, &GPIO_InitStruct4);
+        // __HAL_RCC_GPIOC_CLK_ENABLE();
+        // GPIO_InitTypeDef GPIO_InitStruct4;
+        // GPIO_InitStruct4.Pin = GPIO_PIN_5;       //init pin 5
+        // GPIO_InitStruct4.Mode = GPIO_MODE_INPUT;
+        // GPIO_InitStruct4.Pull = GPIO_PULLDOWN;
+        // //GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+        // HAL_GPIO_Init(GPIOC, &GPIO_InitStruct4);
 
     }
 }
