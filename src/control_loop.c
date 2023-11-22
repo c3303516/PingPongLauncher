@@ -14,7 +14,8 @@
 
 
 #define FREQ 10      //period of control loop in seconds
-#define INPUTMAX 100000/2
+#define INPUTMAX 100000/2       //cant remember why the 2 was there. Fixed pwm earlier tho?
+#define PERIOD 1./FREQ
 
 float angle;
 float u = 0;
@@ -125,7 +126,7 @@ void control_timer_start(void)
 {
     int delay = 1000/FREQ;
     // int delay = 5000;
-    printf("started\n");
+    printf("Control timer started\n");
     osTimerStart(_control_timer_id,delay);
 }
 
@@ -138,7 +139,7 @@ void aim_timer_start(void)
 {
     int delay = 1000/FREQ;
     // int delay = 5000;
-    printf("started\n");
+    printf("Aim timer started\n");
     osTimerStart(_aim_timer_id,delay);
 }
 
@@ -168,42 +169,46 @@ void kalman_loop_update(void *arg)  //kalman updates for calibration
 void control_loop_update(void *arg)
 {       UNUSED(arg);
 
+    // printf("%f\n", PERIOD);
+
     // find error
-    enc1_t,enc2_t,enc3_t = motor_encoder_getValue();
-    printf('Encoders %0.1f, %0.1f, %0.1f\n',enc1_t,enc2_t,enc3_t);
+    enc1_t = motor_encoder1_getValue();
+    enc2_t = motor_encoder2_getValue();
+    enc3_t = motor_encoder3_getValue();
+    // printf("Encoders %i, %i, %i\n",enc1_t,enc2_t,enc3_t);
     enc1_diff = enc1_t - enc1_t1;
     if (enc1_diff < 0){     //wrap around consideration for encodr count
         enc1_diff = enc1_diff + 2147483647;
     }
-    angvel1 = motor_encoder_getRev(enc1_diff)/(1./FREQ);    //find ang velocity, in RPS
+    angvel1 = motor_encoder_getRev(enc1_diff)/(PERIOD);    //find ang velocity, in RPS
 
     enc2_diff = enc2_t - enc2_t1;
     if (enc2_diff < 0){     //wrap around consideration for encodr count
         enc2_diff = enc2_diff + 2147483647;
     }
-    angvel2 = motor_encoder_getRev(enc2_diff)/(1./FREQ);    //find ang velocity, in RPS
+    angvel2 = motor_encoder_getRev(enc2_diff)/(PERIOD);    //find ang velocity, in RPS
    
     enc3_diff = enc3_t - enc3_t1;
     if (enc3_diff < 0){     //wrap around consideration for encodr count
         enc3_diff = enc3_diff + 2147483647;
     }
-    angvel3 = motor_encoder_getRev(enc3_diff)/(1./FREQ);    //find ang velocity, in RPS
+    angvel3 = motor_encoder_getRev(enc3_diff)/(PERIOD);    //find ang velocity, in RPS
 
 
     refvel = getReference();
 
-    //35 is 20 000 input, for the 5V
+    //35 is 20 000 input, for the 5V. Changed to 30000 after pwm shenanigans
     ubar = 20000*(refvel/35);       // approximate linearly from ref
 
     // printf("referencevalue %0.1f\n", refvel);
     //try simpsons rule, assuming linear over timestep
-    // erri = erri + (1./FREQ)*(1/3)*(errorold + 2*(errornew+errorold) + errornew);
+    // erri = erri + (PERIOD)*(1/3)*(errorold + 2*(errornew+errorold) + errornew);
 
     error1new = refvel - angvel1;
-    derr1 = (error1new - error1old)/(1./FREQ);      //find derr/dt might wrong here?
-    erri1 = erri1 + 0.5*(error1new + error1old)*(1./FREQ);      //find approx integral. maybe adjust this later
+    derr1 = (error1new - error1old)/(PERIOD);      //find derr/dt might wrong here?
+    erri1 = erri1 + 0.5*(error1new + error1old)*(PERIOD);      //find approx integral. maybe adjust this later
 
-    if ((angvel1 == 0 )&&(refvel == 0 )){
+    if ((angvel1 == 0 )||(refvel == 0 )){
             error1new = 0;
             erri1 = 0;       //clear all control
             derr1 = 0;
@@ -212,10 +217,10 @@ void control_loop_update(void *arg)
     thrustpercent1 = ubar + input1;           // this will allow negative inptus
 
     error2new = refvel - angvel2;
-    derr2 = (error2new - error2old)/(1./FREQ);      //find derr/dt might wrong here?
-    erri2 = erri2 + 0.5*(error2new + error2old)*(1./FREQ);      //find approx integral. maybe adjust this later
+    derr2 = (error2new - error2old)/(PERIOD);      //find derr/dt might wrong here?
+    erri2 = erri2 + 0.5*(error2new + error2old)*(PERIOD);      //find approx integral. maybe adjust this later
 
-    if ((angvel2 == 0 )&&(refvel == 0 )){
+    if ((angvel2 == 0 )||(refvel == 0 )){
             error2new = 0;
             erri2 = 0;       //clear all control
             derr2 = 0;
@@ -224,10 +229,10 @@ void control_loop_update(void *arg)
     thrustpercent2 = ubar + input2;           // this will allow negative inptus
 
     error3new = refvel - angvel3;
-    derr3 = (error3new - error3old)/(1./FREQ);      //find derr/dt might wrong here?
-    erri3 = erri3 + 0.5*(error3new + error3old)*(1./FREQ);      //find approx integral. maybe adjust this later
+    derr3 = (error3new - error3old)/(PERIOD);      //find derr/dt might wrong here?
+    erri3 = erri3 + 0.5*(error3new + error3old)*(PERIOD);      //find approx integral. maybe adjust this later
 
-    if ((angvel3 == 0 )&&(refvel == 0 )){
+    if ((angvel3 == 0 )||(refvel == 0 )){
             error3new = 0;
             erri3 = 0;       //clear all control
             derr3 = 0;
@@ -242,25 +247,25 @@ void control_loop_update(void *arg)
         thrustpercent1 = 0;
     } else if (thrustpercent1 > INPUTMAX){
         thrustpercent1 = INPUTMAX;        //saturate the percentage
-        erri1 = 0;       //cleear
+        // erri1 = 0;       //cleear
     }
     if (thrustpercent2< 0 ){
         thrustpercent2 = 0;
     } else if (thrustpercent2 > INPUTMAX){
         thrustpercent2 = INPUTMAX;        //saturate the percentage
-        erri2 = 0;       //cleear
+        // erri2 = 0;       //cleear
     }
     if (thrustpercent3< 0 ){
         thrustpercent3 = 0;
     } else if (thrustpercent3 > INPUTMAX){
         thrustpercent3 = INPUTMAX;        //saturate the percentage
-        erri3 = 0;       //cleear
+        // erri3 = 0;       //cleear
     }
 
-    // printf("thrust %0.5f\n", thrustpercent);
+    // printf("thrust %0.5f\n", thrustpercent1);
     velocity_adjust(thrustpercent1,thrustpercent2,thrustpercent3);     //apply new velocity
 
-    // printf("motor vel %0.1f\n", angvel);
+    printf("motor vel %0.1f %0.1f %0.1f\n", angvel1,angvel2,angvel3);
 
     enc1_t1 = enc1_t;       //update encoder count
     error1old = error1new;
@@ -287,8 +292,8 @@ void aim_loop_update(void *arg)
     
     Ele_errornew = refEle - Ele_new;        //find error
 
-    Ele_derr = (Ele_errornew - Ele_errorold)/(1./FREQ);      //find derr/dt
-    Ele_erri = Ele_erri + 0.5*(Ele_errornew + Ele_errorold)*(1./FREQ);      //find approx integral. maybe adjust this later
+    Ele_derr = (Ele_errornew - Ele_errorold)/(PERIOD);      //find derr/dt
+    Ele_erri = Ele_erri + 0.5*(Ele_errornew + Ele_errorold)*(PERIOD);      //find approx integral. maybe adjust this later
 
     ele_ctrl_update(Ele_errornew, Ele_erri, Ele_derr);      //update control
     ele_input = getEleControl(); 

@@ -36,7 +36,7 @@ static osTimerAttr_t _data_logger_timer_attr =
         //result = pendulum_read_voltage();
 
         //hijack this for encoder use
-        result = motor_encoder_getValue();
+        result = motor_encoder1_getValue();
  /* TODO: Print the sample time and potentiometer voltage to the serial terminal in the format [time],[
 voltage] */
     sampleTime = logCount*0.005;

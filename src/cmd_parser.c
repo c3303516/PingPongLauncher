@@ -49,8 +49,8 @@ static CMD_T cmd_table[] =
     /*{_cmd_logIMUData      , "logIMU"    , ""              , "Logs 5 seconds of IMU data."} ,*/
     // {_cmd_updateControl  , "getControl"   , "[x1,x2]"              , "Updates Control"} ,
    /* {_cmd_updateKalman  , "getKalman"   , "[angle,vel]"              , "Runs through an iteration of the Kalman filter"} ,*/
-    {_cmd_setVelocity  , "setVel"   , "[vel]"              , "Sets target for motor velocity in rad/s"} ,
-    {_cmd_setReference  , "setRef"   , "[yref]"              , "Sets velocity reference"} ,
+    {_cmd_setVelocity  , "setVel"   , "[vel]"              , "Sets target for motor velocity in revs/s"} ,
+    // {_cmd_setReference  , "setRef"   , "[yref]"              , "Sets velocity reference"} ,
     {_cmd_setElevation  , "setEle"   , "[phiref]"              , "Sets Elevation reference"} ,
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
@@ -162,10 +162,12 @@ void _cmd_getEncoderCount(int argc, char *argv[])
     // float voltage = pendulum_read_voltage();
 
     //We want to read an ENCODER for this one!!
-    int32_t enc_count = motor_encoder_getValue();
+    int32_t enc_count1 = motor_encoder1_getValue();
+    int32_t enc_count2 = motor_encoder2_getValue();
+    int32_t enc_count3 = motor_encoder3_getValue();
     
     /* TODO: Print the voltage to the serial terminal */
-    printf("%ld\n", enc_count);
+    printf("%ld %ld %ld\n", enc_count1,enc_count2,enc_count3);
 }
 
 static void _print_chip_pinout(void);

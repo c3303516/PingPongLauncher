@@ -82,7 +82,7 @@ void dummy_task_update(void *arg)
         // osDelay(2000);                                  //delay
         // printf("mode = %d\n",mode);
         // // kalman_timer_stop();                            //stop kalman
-        printf("Dummy\n");
+        // printf("Dummy\n");
         control_timer_start();                          //start control
         // osDelay(1000);                                  //balance for a second
         // if (mode == 1){                                 //if switch is closed, change yref
@@ -98,7 +98,7 @@ void dummy_task_update(void *arg)
         // thrustpercent = 10;
         // velocity_adjust(thrustpercent);
         // osDelay(2000);
-        aim_timer_start();
+        // aim_timer_start();
         
         dummy_task_stop();
     }
