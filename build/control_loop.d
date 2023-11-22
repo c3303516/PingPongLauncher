@@ -6,21 +6,24 @@ build/control_loop.o: src/control_loop.c src/dummy_task.h \
  c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\_newlib_version.h \
  c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\sys\_intsup.h \
  c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\sys\_stdint.h \
- ../STM32Cube_F4_FW/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
- src/stm32f4xx_hal_conf.h \
- c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\stdio.h \
+ c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\stdlib.h \
+ c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\machine\ieeefp.h \
  c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\_ansi.h \
  c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\newlib.h \
  c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\sys\config.h \
- c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\machine\ieeefp.h \
- c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\sys\cdefs.h \
  c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\lib\gcc\arm-none-eabi\9.2.1\include\stddef.h \
- c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\lib\gcc\arm-none-eabi\9.2.1\include\stdarg.h \
  c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\sys\reent.h \
  c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\_ansi.h \
  c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\sys\_types.h \
  c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\machine\_types.h \
  c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\sys\lock.h \
+ c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\sys\cdefs.h \
+ c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\machine\stdlib.h \
+ c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\math.h \
+ ../STM32Cube_F4_FW/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
+ src/stm32f4xx_hal_conf.h \
+ c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\stdio.h \
+ c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\lib\gcc\arm-none-eabi\9.2.1\include\stdarg.h \
  c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\sys\types.h \
  c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\sys\_pthreadtypes.h \
  c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\arm-none-eabi\include\machine\types.h \

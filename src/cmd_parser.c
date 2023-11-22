@@ -51,7 +51,7 @@ static CMD_T cmd_table[] =
    /* {_cmd_updateKalman  , "getKalman"   , "[angle,vel]"              , "Runs through an iteration of the Kalman filter"} ,*/
     {_cmd_setVelocity  , "setVel"   , "[vel]"              , "Sets target for motor velocity in revs/s"} ,
     // {_cmd_setReference  , "setRef"   , "[yref]"              , "Sets velocity reference"} ,
-    {_cmd_setElevation  , "setEle"   , "[phiref]"              , "Sets Elevation reference"} ,
+    {_cmd_setElevation  , "setEle"   , "[phiref]"              , "Sets Elevation reference (degrees)"} ,
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
 enum {CMD_MAX_TOKENS = 5};      // Maximum number of tokens to process (command + arguments)

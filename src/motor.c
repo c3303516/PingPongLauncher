@@ -119,7 +119,7 @@ osTimerAttr_t   _comms_report_timer_attr =
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
-    // HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 // DIR PIN INIT / PHase pin init    for launchers
 	GPIO_InitTypeDef GPIO_InitStruct10;
@@ -132,7 +132,7 @@ osTimerAttr_t   _comms_report_timer_attr =
 	GPIO_InitStruct11.Pin = GPIO_PIN_13|GPIO_PIN_14;		//PB13 for azimuth, PB14 for elevation
 	GPIO_InitStruct11.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct11.Pull = GPIO_PULLDOWN;
-	// HAL_GPIO_Init(GPIOB, &GPIO_InitStruct11);
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct11);
         
 
  /*  Initialise timer 3 
@@ -217,7 +217,7 @@ void elevation_adjust(float lift)
             ele_dutycycle = 0;
         }
    // dutycycle = (TIMERPERIOD)*thrust;	
-    printf("duty cycle %0.2f\n", ele_dutycycle);
+    // printf("duty cycle %0.2f\n", ele_dutycycle);
 	__HAL_TIM_SET_COMPARE(&_htim3, TIM_CHANNEL_2, (uint32_t)ele_dutycycle);
 }
 

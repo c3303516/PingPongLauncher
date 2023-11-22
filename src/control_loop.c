@@ -1,7 +1,8 @@
 #include "dummy_task.h"
 
 #include <stdint.h>
-
+#include <stdlib.h>
+#include <math.h>
 #include "stm32f4xx_hal.h"
 #include "cmsis_os2.h"
 #include "uart.h"
@@ -26,6 +27,7 @@ float Elepercent;
 float refEle = 0;
 float newrefEle = 0;
 float Ele = 0;
+
 
 int32_t enc1_t=0;
 int32_t enc2_t= 0;
@@ -74,6 +76,8 @@ static float Ele_errornew = 0;
 static float Ele_erri = 0;
 static float Ele_derr = 0;
 static float ele_input = 0;
+static float ele_angvel = 0;
+float ele_mag;
 
 static void control_loop_update(void *arg);
 static osTimerId_t _control_timer_id;
@@ -265,7 +269,7 @@ void control_loop_update(void *arg)
     // printf("thrust %0.5f\n", thrustpercent1);
     velocity_adjust(thrustpercent1,thrustpercent2,thrustpercent3);     //apply new velocity
 
-    printf("motor vel %0.1f %0.1f %0.1f\n", angvel1,angvel2,angvel3);
+    // printf("motor vel %0.1f %0.1f %0.1f\n", angvel1,angvel2,angvel3);
 
     enc1_t1 = enc1_t;       //update encoder count
     error1old = error1new;
@@ -282,8 +286,11 @@ void aim_loop_update(void *arg)
 {   UNUSED(arg);
     // Ele_new = elevation_encoder_getAngle(ele_encoder_getValue());
     Ele_new = ele_encoder_getValue();
-    newrefEle = 298*14*(getElevation());        //work on encoder count now?
-
+    ele_angvel = (Ele_new - Ele_old)/(PERIOD);
+    printf("Elevation %0.1f\n",getElevation());
+    newrefEle = 298*14*(getElevation()/360);        //work on encoder count now?
+    printf("Set point %0.1f\n",newrefEle);
+    printf("Encoder Value %0.1f\n", Ele_new);
     if (newrefEle != refEle){
         Ele_erri = 0;       //clear integrator 
         refEle = newrefEle;
@@ -292,11 +299,20 @@ void aim_loop_update(void *arg)
     
     Ele_errornew = refEle - Ele_new;        //find error
 
+
+
     Ele_derr = (Ele_errornew - Ele_errorold)/(PERIOD);      //find derr/dt
     Ele_erri = Ele_erri + 0.5*(Ele_errornew + Ele_errorold)*(PERIOD);      //find approx integral. maybe adjust this later
 
     ele_ctrl_update(Ele_errornew, Ele_erri, Ele_derr);      //update control
     ele_input = getEleControl(); 
+
+    ele_mag = fabs(Ele_errornew);
+    if ((ele_angvel = 0)&&(ele_mag<10)){  //will stop moving if within this
+
+        Ele_errornew = 0;
+        Ele_erri = 0;
+    }
 
     if (ele_input < (-1*INPUTMAX) ){
         ele_input = -INPUTMAX;

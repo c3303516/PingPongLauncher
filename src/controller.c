@@ -30,9 +30,9 @@ static float Kp = 30;
 static float Ki = 30;
 static float Kd = 0;
 
-static float ele_Kp = 5;        //500    
-static float ele_Ki = 5;
-static float ele_Kd = 2;
+static float ele_Kp = 50;        //500    
+static float ele_Ki = 100;
+static float ele_Kd = 20;
 
 
 static float elevation = 0;
