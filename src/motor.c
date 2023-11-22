@@ -121,6 +121,14 @@ osTimerAttr_t   _comms_report_timer_attr =
     GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+    // GPIO_InitTypeDef GPIO_InitStruct;
+    GPIO_InitStruct.Pin = GPIO_PIN_6;       //Azimuth
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF2_TIM4;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
 // DIR PIN INIT / PHase pin init    for launchers
 	GPIO_InitTypeDef GPIO_InitStruct10;
 	GPIO_InitStruct10.Pin = GPIO_PIN_5;		//PB5
@@ -221,6 +229,25 @@ void elevation_adjust(float lift)
 	__HAL_TIM_SET_COMPARE(&_htim3, TIM_CHANNEL_2, (uint32_t)ele_dutycycle);
 }
 
+void azimuth_adjust(float aim)
+{
+    if (aim < 0){
+        HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_SET);
+        azi_dutycycle = fabs(aim);     //adjust for direction
+    } else
+        if (aim > 0) {
+            HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);		//output of dire pin
+            azi_dutycycle = aim;	
+        }
+        else{
+            azi_dutycycle = 0;
+        }
+   // dutycycle = (TIMERPERIOD)*thrust;	
+    // printf("duty cycle %0.2f\n", ele_dutycycle);
+	__HAL_TIM_SET_COMPARE(&_htim4, TIM_CHANNEL_1, (uint32_t)azi_dutycycle);
+}
+
+
 
 
 
@@ -245,7 +272,7 @@ void elevation_adjust(float lift)
         GPIO_EncInitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
         HAL_GPIO_Init(GPIOC, &GPIO_EncInitStruct);
 
-        GPIO_InitTypeDef GPIO_EncInitStruct2;          //fucks shit
+        GPIO_InitTypeDef GPIO_EncInitStruct2;         
         GPIO_EncInitStruct2.Pin = GPIO_PIN_0;                  //PC0, PA0
         GPIO_EncInitStruct2.Mode = GPIO_MODE_IT_RISING_FALLING;
         GPIO_EncInitStruct2.Pull = GPIO_NOPULL;
@@ -271,6 +298,14 @@ void elevation_adjust(float lift)
 
         //AZIMUTH
 
+        GPIO_InitTypeDef GPIO_EncInitStruct5;
+        GPIO_EncInitStruct5.Pin = GPIO_PIN_1;
+        GPIO_EncInitStruct5.Mode = GPIO_MODE_IT_RISING_FALLING;     //PB1,Pc4
+        GPIO_EncInitStruct5.Pull = GPIO_NOPULL;
+        GPIO_EncInitStruct5.Speed = GPIO_SPEED_FREQ_HIGH;
+        HAL_GPIO_Init(GPIOB, &GPIO_EncInitStruct5);
+        GPIO_EncInitStruct5.Pin = GPIO_PIN_4;
+        HAL_GPIO_Init(GPIOC, &GPIO_EncInitStruct5);
 
  
 
@@ -445,6 +480,11 @@ void EXTI3_IRQHandler(void) {
 int32_t ele_encoder_getValue(void)
     {
         return ele_enc_count;
+    }
+
+int32_t azi_encoder_getValue(void)
+    {
+        return azi_enc_count;
     }
 
 

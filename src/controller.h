@@ -13,6 +13,10 @@ float getElevation(void);
 void control_set_elevation(float);
 float getEleControl(void);
 void ele_ctrl_update(float,float,float);
+float getAzimuth(void);
+void control_set_azimuth(float);
+float getAziControl(void);
+void azi_ctrl_update(float,float,float);
 
 enum {
  CTRL_N_INPUT = 1, // number of controller inputs (reference signals)

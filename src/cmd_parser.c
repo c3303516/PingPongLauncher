@@ -34,6 +34,7 @@ static void _cmd_logEncData(int, char *[]);
 static void _cmd_setVelocity(int, char *[]);
 static void _cmd_setReference(int, char *[]);
 static void _cmd_setElevation(int, char *[]);
+static void _cmd_setAzimuth(int, char *[]);
 
 // Modules that provide commands
 #include "heartbeat_cmd.h"
@@ -52,6 +53,7 @@ static CMD_T cmd_table[] =
     {_cmd_setVelocity  , "setVel"   , "[vel]"              , "Sets target for motor velocity in revs/s"} ,
     // {_cmd_setReference  , "setRef"   , "[yref]"              , "Sets velocity reference"} ,
     {_cmd_setElevation  , "setEle"   , "[phiref]"              , "Sets Elevation reference (degrees)"} ,
+    {_cmd_setAzimuth  , "setAzi"   , "[thetaref]"              , "Sets Azimuth reference (degrees)"} ,
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
 enum {CMD_MAX_TOKENS = 5};      // Maximum number of tokens to process (command + arguments)
@@ -82,6 +84,19 @@ static void _cmd_setElevation(int argc, char *argv[])
     {
         control_set_elevation(atof(argv[1]));
         printf("%f\n", getElevation());
+    }
+}
+static void _cmd_setAzimuth(int argc, char *argv[])
+{
+    /* TODO: Supress compiler warnings for unused arguments */
+    if(argc != 2)
+        {
+            printf("Incorrect arguments\n");
+        }
+    else
+    {
+        control_set_azimuth(atof(argv[1]));
+        printf("%f\n", getAzimuth());
     }
 }
 

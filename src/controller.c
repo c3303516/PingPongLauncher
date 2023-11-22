@@ -34,14 +34,19 @@ static float ele_Kp = 50;        //500
 static float ele_Ki = 100;
 static float ele_Kd = 20;
 
+static float azi_Kp = 50;        //500    
+static float azi_Ki = 100;
+static float azi_Kd = 20;
+
 
 static float elevation = 0;
+static float azimuth = 0;
 static float yref = 0;
 
 
 static float u;
 static float u_ele;
-
+static float u_azi;
 
  void ctrl_init(void)
  {
@@ -59,6 +64,10 @@ float getControl(void)
 float getEleControl(void)
 {
     return u_ele;
+}
+float getAziControl(void)
+{
+    return u_azi;
 }
 
 void ctrl_set_yref(float y)
@@ -82,6 +91,16 @@ void control_set_elevation(float ele)
 }
 
 
+float getAzimuth(void)
+{
+    return azimuth;
+}
+
+void control_set_azimuth(float azi)
+{
+    azimuth = azi;
+}
+
 /* Update control output */
 float ctrl_update(float err, float err_i, float err_d)
 {
@@ -92,5 +111,11 @@ float ctrl_update(float err, float err_i, float err_d)
 void ele_ctrl_update(float err, float err_i, float err_d)
 {
 u_ele = ele_Kp*err + ele_Ki*err_i + ele_Kd*err_d;
+// return u;
+}
+
+void azi_ctrl_update(float err, float err_i, float err_d)
+{
+u_azi = azi_Kp*err + azi_Ki*err_i + azi_Kd*err_d;
 // return u;
 }

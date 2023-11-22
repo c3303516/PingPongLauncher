@@ -23,10 +23,7 @@ float u = 0;
 float ang_momentum;
 float refvel = 0;
 float speed = 0;
-float Elepercent;
-float refEle = 0;
-float newrefEle = 0;
-float Ele = 0;
+
 
 
 int32_t enc1_t=0;
@@ -65,8 +62,6 @@ static float input3 = 0;
 float angvel3;
 float thrustpercent3;
 
-
-
 int i = 0;
 
 float Ele_old = 0;
@@ -78,6 +73,20 @@ static float Ele_derr = 0;
 static float ele_input = 0;
 static float ele_angvel = 0;
 float ele_mag;
+float refEle = 0;
+float newrefEle = 0;
+
+float azi_old = 0;
+float azi_new = 0;
+static float azi_errorold = 0;
+static float azi_errornew = 0;
+static float azi_erri = 0;
+static float azi_derr = 0;
+static float azi_input = 0;
+static float azi_angvel = 0;
+float azi_mag;
+float refazi = 0;
+float newrefazi = 0;
 
 static void control_loop_update(void *arg);
 static osTimerId_t _control_timer_id;
@@ -287,20 +296,15 @@ void aim_loop_update(void *arg)
     // Ele_new = elevation_encoder_getAngle(ele_encoder_getValue());
     Ele_new = ele_encoder_getValue();
     ele_angvel = (Ele_new - Ele_old)/(PERIOD);
-    printf("Elevation %0.1f\n",getElevation());
+    // printf("Elevation %0.1f\n",getElevation());
     newrefEle = 298*14*(getElevation()/360);        //work on encoder count now?
-    printf("Set point %0.1f\n",newrefEle);
-    printf("Encoder Value %0.1f\n", Ele_new);
+
     if (newrefEle != refEle){
         Ele_erri = 0;       //clear integrator 
         refEle = newrefEle;
     }
 
-    
     Ele_errornew = refEle - Ele_new;        //find error
-
-
-
     Ele_derr = (Ele_errornew - Ele_errorold)/(PERIOD);      //find derr/dt
     Ele_erri = Ele_erri + 0.5*(Ele_errornew + Ele_errorold)*(PERIOD);      //find approx integral. maybe adjust this later
 
@@ -321,11 +325,43 @@ void aim_loop_update(void *arg)
         ele_input = INPUTMAX;        //saturate the percentage
         Ele_erri = 0;      //cleear
     }
+    
+    //AZIMUTH///////////
+    azi_new = azi_encoder_getValue();
+    azi_angvel = (azi_new - azi_old)/(PERIOD);
+    printf("Azi %0.1f\n", getAzimuth());
+    newrefazi = 298*14*(getAzimuth()/360);        //work on encoder count now?
 
+    if (newrefazi != refazi){
+        azi_erri = 0;       //clear integrator 
+        refazi = newrefazi;
+    }
+
+    azi_errornew = refazi - azi_new;        //find error
+    azi_derr = (azi_errornew - azi_errorold)/(PERIOD);      //find derr/dt
+    azi_erri = azi_erri + 0.5*(azi_errornew + azi_errorold)*(PERIOD);      //find approx integral. maybe adjust this later
+
+    azi_ctrl_update(azi_errornew, azi_erri, azi_derr);      //update control
+    azi_input = getAziControl(); 
+
+    azi_mag = fabs(azi_errornew);
+    if ((azi_angvel = 0)&&(azi_mag<10)){  //will stop moving if within this
+
+        azi_errornew = 0;
+        azi_erri = 0;
+    }
+
+    if (azi_input < (-1*INPUTMAX) ){
+        azi_input = -INPUTMAX;
+        azi_erri = 0;
+    } else if (azi_input > INPUTMAX){
+        azi_input = INPUTMAX;        //saturate the percentage
+        azi_erri = 0;      //cleear
+    }
     // ele_input = 0;
 
     elevation_adjust(ele_input);
-    // elevation_adjust(refEle);
+    azimuth_adjust(azi_input);
 
 
 
@@ -334,4 +370,9 @@ void aim_loop_update(void *arg)
     // printf("Elevation %0.2f\n", Ele_new);
     Ele_old = Ele_new;
     Ele_errorold = Ele_errornew;
+    azi_old = azi_new;
+    azi_errorold = azi_errornew;
+
+    printf("Set Ele Azi %0.1f, %0.1f\n",newrefEle,newrefazi);
+    printf("Current Ele Azi %0.1f, %0.1f\n", Ele_new, azi_new);
 }

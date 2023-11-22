@@ -22,7 +22,9 @@
 // void comms_loop_init(void)
 void velocity_adjust(float,float,float);
 void elevation_adjust(float);
+void azimuth_adjust(float);
 float elevation_encoder_getAngle(int32_t);
 int32_t ele_encoder_getValue(void);
+int32_t azi_encoder_getValue(void);
 
 #endif
