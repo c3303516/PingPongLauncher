@@ -9,7 +9,7 @@
 static TIM_HandleTypeDef _htim2;
 static TIM_HandleTypeDef _htim3;
 static TIM_HandleTypeDef _htim4;
-static TIM_HandleTypeDef _htim8;
+static TIM_HandleTypeDef _htim11;
 
 static TIM_OC_InitTypeDef _sConfigPULSE;
 #define TIMERPERIOD 100000        //1kHz signal
@@ -41,6 +41,11 @@ static float dutycycle3;
 
 static float ele_duty;
 static float azi_duty;
+
+//SERVO
+float offset =0;
+float value;
+float duty;
 
 
 // pin variables for the launhcer encoders
@@ -82,6 +87,7 @@ osTimerAttr_t   _comms_report_timer_attr =
     __HAL_RCC_TIM2_CLK_ENABLE();
     __HAL_RCC_TIM3_CLK_ENABLE();
     __HAL_RCC_TIM4_CLK_ENABLE();
+    __HAL_RCC_TIM11_CLK_ENABLE();
     // __HAL_RCC_TIM8_CLK_ENABLE();
  /*  Enable GPIOA clock */
     __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -129,6 +135,14 @@ osTimerAttr_t   _comms_report_timer_attr =
     GPIO_InitStruct.Alternate = GPIO_AF2_TIM4;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+    // GPIO_InitTypeDef GPIO_InitStruct;
+    GPIO_InitStruct.Pin = GPIO_PIN_9;       //SERVO
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF3_TIM11;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
 // DIR PIN INIT / PHase pin init    for launchers
 	GPIO_InitTypeDef GPIO_InitStruct10;
 	GPIO_InitStruct10.Pin = GPIO_PIN_5;		//PB5
@@ -166,7 +180,7 @@ osTimerAttr_t   _comms_report_timer_attr =
     _htim2.Init.Prescaler = 2; 
     _htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
     _htim2.Init.Period = TIMERPERIOD/2;
-    _htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;;
+    _htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 
     HAL_TIM_PWM_Init(&_htim2);
     HAL_TIM_PWM_ConfigChannel(&_htim2, &_sConfigPULSE, TIM_CHANNEL_3);
@@ -175,11 +189,22 @@ osTimerAttr_t   _comms_report_timer_attr =
     _htim4.Init.Prescaler = 2; 
     _htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
     _htim4.Init.Period = TIMERPERIOD/2;
-    _htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;;
+    _htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 
     HAL_TIM_PWM_Init(&_htim4);
     HAL_TIM_PWM_ConfigChannel(&_htim4, &_sConfigPULSE, TIM_CHANNEL_1);
     HAL_TIM_PWM_ConfigChannel(&_htim4, &_sConfigPULSE, TIM_CHANNEL_2);
+
+    //SERVO
+    _htim11.Instance = TIM11;
+
+    _htim11.Init.Prescaler = 40;
+    _htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
+    _htim11.Init.Period = TIMERPERIOD/2;      //should equate to 1kHz
+    _htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    HAL_TIM_PWM_Init(&_htim11);
+    HAL_TIM_PWM_ConfigChannel(&_htim11, &_sConfigPULSE, TIM_CHANNEL_1);
+
 
 
     /* Set initial Timer 3, channel 1 compare value */
@@ -189,6 +214,7 @@ osTimerAttr_t   _comms_report_timer_attr =
    HAL_TIM_PWM_Start(&_htim2, TIM_CHANNEL_3);
    HAL_TIM_PWM_Start(&_htim4, TIM_CHANNEL_1);
    HAL_TIM_PWM_Start(&_htim4, TIM_CHANNEL_2);
+   HAL_TIM_PWM_Start(&_htim11, TIM_CHANNEL_1);
 //    HAL_TIM_PWM_Start(&_htim8, TIM_CHANNEL_2);
  }
 
@@ -247,7 +273,15 @@ void azimuth_adjust(float aim)
 	__HAL_TIM_SET_COMPARE(&_htim4, TIM_CHANNEL_1, (uint32_t)azi_dutycycle);
 }
 
+void servo_adjust(float deg){
 
+    value = (deg/180);
+    offset = 2400;
+    duty = 5000*value + offset;
+    // duty = deg;
+    //10000 duty cycle is 4ms pulse. Therefore 2500 is 1ms. Offset has been adjusted to give around 180deg of motion
+	__HAL_TIM_SET_COMPARE(&_htim11, TIM_CHANNEL_1, (uint32_t)duty);
+}
 
 
 

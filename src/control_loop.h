@@ -14,4 +14,8 @@ void aim_timer_start(void);
 void aim_timer_stop(void);
 void aim_loop_init(void);
 
+void servo_timer_start(void);
+void servo_timer_stop(void);
+void servo_loop_init(void);
+
 #endif

@@ -88,6 +88,9 @@ float azi_mag;
 float refazi = 0;
 float newrefazi = 0;
 
+static uint8_t _is_running = 0;
+static uint8_t _is_init = 0;
+
 static void control_loop_update(void *arg);
 static osTimerId_t _control_timer_id;
 static osTimerAttr_t _control_timer_attr =
@@ -108,8 +111,12 @@ static osTimerAttr_t _aim_timer_attr =
     .name = "aimTimer"
 };
 
-static uint8_t _is_running = 0;
-static uint8_t _is_init = 0;
+static void servo_loop_update(void *arg);
+static osTimerId_t _servo_timer_id;
+static osTimerAttr_t _servo_timer_attr =
+{
+    .name = "servoTimer"
+};
 
 void control_loop_init(void)  
  { 
@@ -123,6 +130,13 @@ void control_loop_init(void)
  { 
      /* TODO: Initialise timer for use with pendulum data logging */
      _aim_timer_id = osTimerNew(aim_loop_update, osTimerPeriodic, NULL, &_aim_timer_attr);
+    //  _kalman_timer_id = osTimerNew(kalman_loop_update, osTimerPeriodic, NULL, &_kalman_timer_attr);
+ }
+
+  void servo_loop_init(void)  
+ { 
+     /* TODO: Initialise timer for use with pendulum data logging */
+     _servo_timer_id = osTimerNew(servo_loop_update, osTimerPeriodic, NULL, &_servo_timer_attr);
     //  _kalman_timer_id = osTimerNew(kalman_loop_update, osTimerPeriodic, NULL, &_kalman_timer_attr);
  }
 // void kalman_timer_start(void)
@@ -159,6 +173,19 @@ void aim_timer_start(void)
 void aim_timer_stop(void)
 {
     osTimerStop(_aim_timer_id);
+}
+
+void servo_timer_start(void)
+{
+    int delay = 1000/FREQ;
+    // int delay = 5000;
+    printf("Servo timer started\n");
+    osTimerStart(_servo_timer_id,delay);
+}
+
+void servo_timer_stop(void)
+{
+    osTimerStop(_servo_timer_id);
 }
 
 void control_set_speed(float spd)
@@ -329,7 +356,7 @@ void aim_loop_update(void *arg)
     //AZIMUTH///////////
     azi_new = azi_encoder_getValue();
     azi_angvel = (azi_new - azi_old)/(PERIOD);
-    printf("Azi %0.1f\n", getAzimuth());
+    // printf("Azi %0.1f\n", getAzimuth());
     newrefazi = 298*14*(getAzimuth()/360);        //work on encoder count now?
 
     if (newrefazi != refazi){
@@ -373,6 +400,20 @@ void aim_loop_update(void *arg)
     azi_old = azi_new;
     azi_errorold = azi_errornew;
 
-    printf("Set Ele Azi %0.1f, %0.1f\n",newrefEle,newrefazi);
-    printf("Current Ele Azi %0.1f, %0.1f\n", Ele_new, azi_new);
+    // printf("Set Ele Azi %0.1f, %0.1f\n",newrefEle,newrefazi);
+    // printf("Current Ele Azi %0.1f, %0.1f\n", Ele_new, azi_new);
+
+    
+    servo_adjust(getElevation());
+}
+
+
+
+void servo_loop_update(void *arg){
+
+    // printf("Servo\n");
+    // float degrees = getElevation(); // hijack elevation rn
+
+    // servo_adjust(degrees);
+
 }

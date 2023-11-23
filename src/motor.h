@@ -26,5 +26,6 @@ void azimuth_adjust(float);
 float elevation_encoder_getAngle(int32_t);
 int32_t ele_encoder_getValue(void);
 int32_t azi_encoder_getValue(void);
+void servo_adjust(float);
 
 #endif
