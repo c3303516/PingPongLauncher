@@ -58,4 +58,5 @@ build/motor.o: src/motor.c \
  ../STM32Cube_F4_FW/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h \
  ../STM32Cube_F4_FW/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../STM32Cube_F4_FW/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
- ../CMSIS_5/CMSIS/RTOS2/Include/cmsis_os2.h src/uart.h src/motor.h
+ ../CMSIS_5/CMSIS/RTOS2/Include/cmsis_os2.h src/uart.h src/motor.h \
+ src/controller.h

@@ -36,6 +36,7 @@ static void _cmd_setReference(int, char *[]);
 static void _cmd_setElevation(int, char *[]);
 static void _cmd_setAzimuth(int, char *[]);
 static void _cmd_setServo(int, char *[]);
+static void _cmd_calibrateElevation(int, char *[]);
 
 // Modules that provide commands
 #include "heartbeat_cmd.h"
@@ -56,6 +57,7 @@ static CMD_T cmd_table[] =
     {_cmd_setElevation  , "setEle"   , "[phiref]"              , "Sets Elevation reference (degrees)"} ,
     {_cmd_setAzimuth  , "setAzi"   , "[thetaref]"              , "Sets Azimuth reference (degrees)"} ,
     {_cmd_setServo  , "setServo"   , "[angle]"              , "Sets servo rotation (deg)"} ,
+    {_cmd_calibrateElevation  , "zeroEle"   , ""              , "Sets current elevation angle to zero"} ,
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
 enum {CMD_MAX_TOKENS = 5};      // Maximum number of tokens to process (command + arguments)
@@ -182,6 +184,16 @@ static void _cmd_logEncData(int argc, char *argv[])
 //     /* TODO: Start pendulum data logging */
 //     imu_logging_start();
 // }
+
+static void _cmd_calibrateElevation(int argc, char *argv[])
+{
+    /* TODO: Supress compiler warnings for unused arguments */
+    UNUSED(argc);
+    UNUSED(argv);
+    //clear encoder value
+    ele_encoder_reset();
+    
+}
 
 void _cmd_getEncoderCount(int argc, char *argv[])
 {   // GET ENCODER CALLS THIS

@@ -30,9 +30,12 @@ static float Kp = 30;
 static float Ki = 30;
 static float Kd = 0;
 
-static float ele_Kp = 50;        //500    
-static float ele_Ki = 100;
+static float ele_Kp = 70;        //these params are without the 13000 offset it elevation adjust
+static float ele_Ki = 50;
 static float ele_Kd = 20;
+// static float ele_Kp = 10;        //these params are without the 13000 offset it elevation adjust
+// static float ele_Ki = 5;
+// static float ele_Kd = 10;
 
 static float azi_Kp = 50;        //500    
 static float azi_Ki = 100;

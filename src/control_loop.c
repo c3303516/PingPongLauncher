@@ -75,6 +75,7 @@ static float ele_angvel = 0;
 float ele_mag;
 float refEle = 0;
 float newrefEle = 0;
+float elevation = 0;
 
 float azi_old = 0;
 float azi_new = 0;
@@ -87,6 +88,7 @@ static float azi_angvel = 0;
 float azi_mag;
 float refazi = 0;
 float newrefazi = 0;
+float azimuth = 0;
 
 static uint8_t _is_running = 0;
 static uint8_t _is_init = 0;
@@ -324,8 +326,8 @@ void aim_loop_update(void *arg)
     Ele_new = ele_encoder_getValue();
     ele_angvel = (Ele_new - Ele_old)/(PERIOD);
     // printf("Elevation %0.1f\n",getElevation());
-    newrefEle = 298*14*(getElevation()/360);        //work on encoder count now?
-
+    newrefEle = 298*14*2*(50/31.25)*(getElevation()/360);        //ref angle to ref encoder count
+                        //gear ratio is approximated from creo model.
     if (newrefEle != refEle){
         Ele_erri = 0;       //clear integrator 
         refEle = newrefEle;
@@ -339,10 +341,12 @@ void aim_loop_update(void *arg)
     ele_input = getEleControl(); 
 
     ele_mag = fabs(Ele_errornew);
-    if ((ele_angvel = 0)&&(ele_mag<10)){  //will stop moving if within this
+    // if ((ele_angvel = 0)&&(ele_mag<10)){  //will stop moving if within this?
+    if ((ele_mag<10)){  //will stop moving if within this
 
-        Ele_errornew = 0;
-        Ele_erri = 0;
+        // Ele_errornew = 0;
+        // Ele_erri = 0;
+        ele_input = 0;      //testing this
     }
 
     if (ele_input < (-1*INPUTMAX) ){
@@ -357,7 +361,7 @@ void aim_loop_update(void *arg)
     azi_new = azi_encoder_getValue();
     azi_angvel = (azi_new - azi_old)/(PERIOD);
     // printf("Azi %0.1f\n", getAzimuth());
-    newrefazi = 298*14*(getAzimuth()/360);        //work on encoder count now?
+    newrefazi = 298*14*2*(getAzimuth()/360);        //work on encoder count now?
 
     if (newrefazi != refazi){
         azi_erri = 0;       //clear integrator 
@@ -400,11 +404,14 @@ void aim_loop_update(void *arg)
     azi_old = azi_new;
     azi_errorold = azi_errornew;
 
+
+    elevation = (360*(Ele_new/(298*14*2)))*(31.25/50);
+    azimuth = 360*(azi_new/(298*14*2));
     // printf("Set Ele Azi %0.1f, %0.1f\n",newrefEle,newrefazi);
-    // printf("Current Ele Azi %0.1f, %0.1f\n", Ele_new, azi_new);
+    printf("Current Ele Azi %0.3f, %0.3f\n", elevation, azimuth);
 
     
-    servo_adjust(getElevation());
+    // servo_adjust(getElevation());
 }
 
 

@@ -5,6 +5,7 @@
 #include "cmsis_os2.h"
 #include "uart.h"
 #include "motor.h"
+#include "controller.h"
 
 static TIM_HandleTypeDef _htim2;
 static TIM_HandleTypeDef _htim3;
@@ -30,8 +31,8 @@ float rev2 = 0;
 float rev3 = 0;
 
 
-static int32_t ele_enc_count;
-static int32_t azi_enc_count;
+static int32_t ele_enc_count=0;
+static int32_t azi_enc_count=0;
 static float ele_dutycycle;
 static float azi_dutycycle;
 static uint8_t _is_init = 0;
@@ -145,10 +146,10 @@ osTimerAttr_t   _comms_report_timer_attr =
 
 // DIR PIN INIT / PHase pin init    for launchers
 	GPIO_InitTypeDef GPIO_InitStruct10;
-	GPIO_InitStruct10.Pin = GPIO_PIN_5;		//PB5
+	GPIO_InitStruct10.Pin = GPIO_PIN_15;		//PA15
 	GPIO_InitStruct10.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct10.Pull = GPIO_PULLDOWN;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct10);
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct10);
 
     GPIO_InitTypeDef GPIO_InitStruct11;
 	GPIO_InitStruct11.Pin = GPIO_PIN_13|GPIO_PIN_14;		//PB13 for azimuth, PB14 for elevation
@@ -223,7 +224,7 @@ osTimerAttr_t   _comms_report_timer_attr =
 void velocity_adjust(float thrust1,float thrust2,float thrust3)
 {
     //try to keep 200Hz to motors
-    HAL_GPIO_WritePin(GPIOB,GPIO_PIN_5,GPIO_PIN_SET);		//output of dire pin
+    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_15,GPIO_PIN_SET);		//output of dire pin
 	// dutycycle = (TIMERPERIOD)*thrust;	
     dutycycle1 = thrust1;	
 	__HAL_TIM_SET_COMPARE(&_htim3, TIM_CHANNEL_1, (uint32_t)dutycycle1);
@@ -241,28 +242,28 @@ void elevation_adjust(float lift)
     // ele_duty = lift;
     if (lift < 0){
         HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
-        ele_dutycycle = fabs(lift);     //adjust for direction
+        ele_dutycycle = fabs(lift); //+ 9000;     //adjust for direction
     } else
         if (lift > 0) {
             HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);		//output of dire pin
-            ele_dutycycle = lift;	
+            ele_dutycycle = lift;// + 9000;	
         }
         else{
             ele_dutycycle = 0;
         }
    // dutycycle = (TIMERPERIOD)*thrust;	
-    // printf("duty cycle %0.2f\n", ele_dutycycle);
+    printf("duty cycle %0.2f\n", ele_dutycycle);
 	__HAL_TIM_SET_COMPARE(&_htim3, TIM_CHANNEL_2, (uint32_t)ele_dutycycle);
 }
 
 void azimuth_adjust(float aim)
 {
     if (aim < 0){
-        HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_SET);
+        HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);
         azi_dutycycle = fabs(aim);     //adjust for direction
     } else
         if (aim > 0) {
-            HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);		//output of dire pin
+            HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_SET);		//output of dire pin
             azi_dutycycle = aim;	
         }
         else{
@@ -474,10 +475,10 @@ void EXTI4_IRQHandler(void) {
 void EXTI2_IRQHandler(void) {       
     if ((HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_2)) == (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_3)))
         {
-        ele_enc_count++;
+        ele_enc_count--;
         }
     else{
-        ele_enc_count--;
+        ele_enc_count++;
         }
 
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
@@ -486,10 +487,10 @@ void EXTI2_IRQHandler(void) {
 void EXTI3_IRQHandler(void) {
     if ((HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_2)) == (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_3)))
         {
-        ele_enc_count--;
+        ele_enc_count++;
         } 
     else{
-        ele_enc_count++;
+        ele_enc_count--;
         }
  /* TODO: Reset interrupt */
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
@@ -514,6 +515,13 @@ void EXTI3_IRQHandler(void) {
 int32_t ele_encoder_getValue(void)
     {
         return ele_enc_count;
+    }
+
+void ele_encoder_reset(void)
+    {   ele_enc_count = 0;
+        control_set_elevation(0);
+        printf("Elevation Calibrated\n");
+        return;
     }
 
 int32_t azi_encoder_getValue(void)
@@ -557,8 +565,9 @@ float  elevation_encoder_getAngle(int32_t elcnt)
     {
         // int32_t cnt = motor_encoder_getValue();
 
-        // 14 cpr * gear ratio of 298.
-
-        float angle = 360*elcnt/(14*298);          //encoder count in degrees. Check this stuff at the bottom
+        // 14 cpr * gear ratio of 298, however this is for only 1 encoder pion.
+        //2*14*298 cpr.
+        // gear ratio of gears is approximated with diameters on creo model.
+        float angle = (31.25/50)*360*elcnt/(14*298*2);          //encoder count in degrees. Check this stuff at the bottom
         return angle;
     }
