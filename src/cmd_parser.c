@@ -52,7 +52,7 @@ static CMD_T cmd_table[] =
     /*{_cmd_logIMUData      , "logIMU"    , ""              , "Logs 5 seconds of IMU data."} ,*/
     // {_cmd_updateControl  , "getControl"   , "[x1,x2]"              , "Updates Control"} ,
    /* {_cmd_updateKalman  , "getKalman"   , "[angle,vel]"              , "Runs through an iteration of the Kalman filter"} ,*/
-    {_cmd_setVelocity  , "setVel"   , "[vel]"              , "Sets target for motor velocity in revs/s"} ,
+    {_cmd_setVelocity  , "setVel"   , "[vel]"              , "Sets target for motor velocity in revs/min"} ,
     // {_cmd_setReference  , "setRef"   , "[yref]"              , "Sets velocity reference"} ,
     {_cmd_setElevation  , "setEle"   , "[phiref]"              , "Sets Elevation reference (degrees)"} ,
     {_cmd_setAzimuth  , "setAzi"   , "[thetaref]"              , "Sets Azimuth reference (degrees)"} ,

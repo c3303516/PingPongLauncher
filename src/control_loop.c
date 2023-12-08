@@ -13,10 +13,11 @@
 #include "controller.h"
 #include "dummy_task.h"
 
-
-#define FREQ 10      //period of control loop in seconds
+#define FREQL 5       //launher
+#define FREQ 10      //period of control loop in seconds aim loop
 #define INPUTMAX 100000/2       //cant remember why the 2 was there. Fixed pwm earlier tho?
 #define PERIOD 1./FREQ
+#define PERIODL 1./FREQL
 
 float angle;
 float u = 0;
@@ -153,7 +154,7 @@ void control_loop_init(void)
 
 void control_timer_start(void)
 {
-    int delay = 1000/FREQ;
+    int delay = 1000/FREQL;
     // int delay = 5000;
     printf("Control timer started\n");
     osTimerStart(_control_timer_id,delay);
@@ -217,25 +218,24 @@ void control_loop_update(void *arg)
     enc1_t = motor_encoder1_getValue();
     enc2_t = motor_encoder2_getValue();
     enc3_t = motor_encoder3_getValue();
-    // printf("Encoders %i, %i, %i\n",enc1_t,enc2_t,enc3_t);
+    printf("Encoders %i, %i, %i\n",enc1_t,enc2_t,enc3_t);
     enc1_diff = enc1_t - enc1_t1;
     if (enc1_diff < 0){     //wrap around consideration for encodr count
         enc1_diff = enc1_diff + 2147483647;
     }
-    angvel1 = motor_encoder_getRev(enc1_diff)/(PERIOD);    //find ang velocity, in RPS
+    angvel1 = 60*(enc1_diff/(12*4.995))/(PERIODL);    //find ang velocity, in RPM
 
     enc2_diff = enc2_t - enc2_t1;
     if (enc2_diff < 0){     //wrap around consideration for encodr count
         enc2_diff = enc2_diff + 2147483647;
     }
-    angvel2 = motor_encoder_getRev(enc2_diff)/(PERIOD);    //find ang velocity, in RPS
-   
+    angvel2 = 60*(enc2_diff/(12*4.995))/(PERIODL);    //find ang velocity, in RPS
+
     enc3_diff = enc3_t - enc3_t1;
     if (enc3_diff < 0){     //wrap around consideration for encodr count
         enc3_diff = enc3_diff + 2147483647;
     }
-    angvel3 = motor_encoder_getRev(enc3_diff)/(PERIOD);    //find ang velocity, in RPS
-
+    angvel3 = 60*(enc3_diff/(12*4.995))/(PERIODL);    //find ang velocity, in RPS
 
     refvel = getReference();
 
@@ -247,8 +247,8 @@ void control_loop_update(void *arg)
     // erri = erri + (PERIOD)*(1/3)*(errorold + 2*(errornew+errorold) + errornew);
 
     error1new = refvel - angvel1;
-    derr1 = (error1new - error1old)/(PERIOD);      //find derr/dt might wrong here?
-    erri1 = erri1 + 0.5*(error1new + error1old)*(PERIOD);      //find approx integral. maybe adjust this later
+    derr1 = (error1new - error1old)/(PERIODL);      //find derr/dt might wrong here?
+    erri1 = erri1 + 0.5*(error1new + error1old)*(PERIODL);      //find approx integral. maybe adjust this later
 
     if ((angvel1 == 0 )||(refvel == 0 )){
             error1new = 0;
@@ -258,56 +258,50 @@ void control_loop_update(void *arg)
     input1 = ctrl_update(error1new, erri1, derr1);      //update control
     thrustpercent1 = ubar + input1;           // this will allow negative inptus
 
-    error2new = refvel - angvel2;
-    derr2 = (error2new - error2old)/(PERIOD);      //find derr/dt might wrong here?
-    erri2 = erri2 + 0.5*(error2new + error2old)*(PERIOD);      //find approx integral. maybe adjust this later
+    // error2new = refvel - angvel2;
+    // derr2 = (error2new - error2old)/(PERIODL);      //find derr/dt might wrong here?
+    // erri2 = erri2 + 0.5*(error2new + error2old)*(PERIODL);      //find approx integral. maybe adjust this later
 
-    if ((angvel2 == 0 )||(refvel == 0 )){
-            error2new = 0;
-            erri2 = 0;       //clear all control
-            derr2 = 0;
-        }
-    input2 = ctrl_update(error2new, erri2, derr2);      //update control
-    thrustpercent2 = ubar + input2;           // this will allow negative inptus
+    // if ((angvel2 == 0 )||(refvel == 0 )){
+    //         error2new = 0;
+    //         erri2 = 0;       //clear all control
+    //         derr2 = 0;
+    //     }
+    // input2 = ctrl_update(error2new, erri2, derr2);      //update control
+    // thrustpercent2 = ubar + input2;           // this will allow negative inptus
 
-    error3new = refvel - angvel3;
-    derr3 = (error3new - error3old)/(PERIOD);      //find derr/dt might wrong here?
-    erri3 = erri3 + 0.5*(error3new + error3old)*(PERIOD);      //find approx integral. maybe adjust this later
+    // error3new = refvel - angvel3;
+    // derr3 = (error3new - error3old)/(PERIOD);      //find derr/dt might wrong here?
+    // erri3 = erri3 + 0.5*(error3new + error3old)*(PERIODL);      //find approx integral. maybe adjust this later
 
-    if ((angvel3 == 0 )||(refvel == 0 )){
-            error3new = 0;
-            erri3 = 0;       //clear all control
-            derr3 = 0;
-        }
-    input3 = ctrl_update(error3new, erri3, derr3);      //update control
-    thrustpercent3 = ubar + input3;           // this will allow negative inptus
+    // if ((angvel3 == 0 )||(refvel == 0 )){
+    //         error3new = 0;
+    //         erri3 = 0;       //clear all control
+    //         derr3 = 0;
+    //     }
+    // input3 = ctrl_update(error3new, erri3, derr3);      //update control
+    // thrustpercent3 = ubar + input3;           // this will allow negative inptus
 
     // printf("controlinput %0.5f\n",thrustpercent);
 
     //saturation tests
-    if (thrustpercent1< 0 ){
-        thrustpercent1 = 0;
-    } else if (thrustpercent1 > INPUTMAX){
-        thrustpercent1 = INPUTMAX;        //saturate the percentage
-        // erri1 = 0;       //cleear
-    }
-    if (thrustpercent2< 0 ){
-        thrustpercent2 = 0;
-    } else if (thrustpercent2 > INPUTMAX){
-        thrustpercent2 = INPUTMAX;        //saturate the percentage
-        // erri2 = 0;       //cleear
-    }
-    if (thrustpercent3< 0 ){
-        thrustpercent3 = 0;
-    } else if (thrustpercent3 > INPUTMAX){
-        thrustpercent3 = INPUTMAX;        //saturate the percentage
-        // erri3 = 0;       //cleear
-    }
+    // if (thrustpercent1 > INPUTMAX){
+    //     thrustpercent1 = INPUTMAX;        //saturate the percentage
+    //     // erri1 = 0;       //cleear
+    // }
+    // if (thrustpercent2 > INPUTMAX){
+    //     thrustpercent2 = INPUTMAX;        //saturate the percentage
+    //     // erri2 = 0;       //cleear
+    // }
+    // if (thrustpercent3 > INPUTMAX){
+    //     thrustpercent3 = INPUTMAX;        //saturate the percentage
+    //     // erri3 = 0;       //cleear
+    // }
 
     // printf("thrust %0.5f\n", thrustpercent1);
     velocity_adjust(thrustpercent1,thrustpercent2,thrustpercent3);     //apply new velocity
 
-    // printf("motor vel %0.1f %0.1f %0.1f\n", angvel1,angvel2,angvel3);
+    printf("motor vel %0.5f\n", angvel1);
 
     enc1_t1 = enc1_t;       //update encoder count
     error1old = error1new;
@@ -342,9 +336,9 @@ void aim_loop_update(void *arg)
 
     ele_mag = fabs(Ele_errornew);
     // if ((ele_angvel = 0)&&(ele_mag<10)){  //will stop moving if within this?
-    if ((ele_mag<10)){  //will stop moving if within this
+    if ((ele_mag<10)){  //will stop moving if within this range.
 
-        // Ele_errornew = 0;
+        // Ele_errornew = 0;    //no longer resetting integrator
         // Ele_erri = 0;
         ele_input = 0;      //testing this
     }
@@ -408,7 +402,7 @@ void aim_loop_update(void *arg)
     elevation = (360*(Ele_new/(298*14*2)))*(31.25/50);
     azimuth = 360*(azi_new/(298*14*2));
     // printf("Set Ele Azi %0.1f, %0.1f\n",newrefEle,newrefazi);
-    printf("Current Ele Azi %0.3f, %0.3f\n", elevation, azimuth);
+    // printf("Current Ele Azi %0.3f, %0.3f\n", elevation, azimuth);
 
     
     // servo_adjust(getElevation());
