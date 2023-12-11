@@ -75,9 +75,10 @@ float getAziControl(void)
 
 void ctrl_set_yref(float y)
 {
-// Updatereference velocity
-yref = y;
+    // Updatereference velocity. THis might be unecessary but it works so.
+    yref = y;
 }
+
 float getReference(void)
 {
     return yref;

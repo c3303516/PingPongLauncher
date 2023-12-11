@@ -281,8 +281,8 @@ void azimuth_adjust(float aim)
 void servo_adjust(float deg){
 
     value = (deg/180);
-    offset = 2400;
-    duty = 5000*value + offset;
+    offset = 2000;                  // approximated
+    duty = 4000*value + offset;     //This 4000 isn't exactly right. Couldn't get the PWM to be exact for some reason
     // duty = deg;
     //10000 duty cycle is 4ms pulse. Therefore 2500 is 1ms. Offset has been adjusted to give around 180deg of motion
 	__HAL_TIM_SET_COMPARE(&_htim11, TIM_CHANNEL_1, (uint32_t)duty);
@@ -347,8 +347,6 @@ void servo_adjust(float deg){
         HAL_GPIO_Init(GPIOC, &GPIO_EncInitStruct5);
 
  
-
-
  /* TODO: Set priority of external interrupt lines 0,1 to 0x0f, 0x0f
  To find the IRQn_Type definition see "MCHA3500 Windows Toolchain\workspace\STM32Cube_F4_FW\Drivers\
 CMSIS\Device\ST\STM32F4xx\Include\stm32f446xx.h" */
@@ -522,8 +520,10 @@ int32_t ele_encoder_getValue(void)
 
 void ele_encoder_reset(void)
     {   ele_enc_count = 0;
+        azi_enc_count = 0;
         control_set_elevation(0);
-        printf("Elevation Calibrated\n");
+        control_set_azimuth(0);
+        printf("Elevation and Azimuth Calibrated\n");
         return;
     }
 
@@ -552,22 +552,10 @@ float motor_encoder_getRev(int32_t cnt)
         float angle = 60*cnt/(12*4.995);          //convert encoder count to revs/min
         return angle;
 
-        // rev1 = (enc1_count-enc1_countold)/59.94;
-        // rev2 = (enc2_count-enc2_countold)/59.94;
-        // rev3 = (enc3_count-enc3_countold)/59.94;
-
-        // enc1_countold = enc1_count;
-        // enc2_countold = enc2_count;
-        // enc3_countold = enc3_count;
-
-        // return rev1, rev2, rev3;
-
     }
 
 float  elevation_encoder_getAngle(int32_t elcnt)
     {
-        // int32_t cnt = motor_encoder_getValue();
-
         // 14 cpr * gear ratio of 298, however this is for only 1 encoder pion.
         //2*14*298 cpr.
         // gear ratio of gears is approximated with diameters on creo model.

@@ -27,15 +27,12 @@ typedef struct
 static void _help(int, char *[]);
 static void _reset(int, char *[]);
 static void _cmd_getEncoderCount(int, char *[]);
-static void _cmd_logEncData(int, char *[]);
-// static void _cmd_logIMUData(int, char *[]);
-// static void _cmd_updateControl(int, char *[]);
-// static void _cmd_updateKalman(int, char *[]);
 static void _cmd_setVelocity(int, char *[]);
 static void _cmd_setReference(int, char *[]);
 static void _cmd_setElevation(int, char *[]);
 static void _cmd_setAzimuth(int, char *[]);
 static void _cmd_setServo(int, char *[]);
+static void _cmd_launch(int, char *[]);
 static void _cmd_calibrateElevation(int, char *[]);
 
 // Modules that provide commands
@@ -48,16 +45,12 @@ static CMD_T cmd_table[] =
     {_reset             , "reset"       , ""                          , "Restarts the system."                   } ,
     {heartbeat_cmd      , "heartbeat"   , "[start|stop]"              , "Get status or start/stop heartbeat task"} ,
     {_cmd_getEncoderCount      , "getEncoder"   , ""              , "Displays the potentiometer voltage level."} ,
-    {_cmd_logEncData      , "logEnc"    , ""              , "Logs 5 seconds of encoder data."} ,
-    /*{_cmd_logIMUData      , "logIMU"    , ""              , "Logs 5 seconds of IMU data."} ,*/
-    // {_cmd_updateControl  , "getControl"   , "[x1,x2]"              , "Updates Control"} ,
-   /* {_cmd_updateKalman  , "getKalman"   , "[angle,vel]"              , "Runs through an iteration of the Kalman filter"} ,*/
     {_cmd_setVelocity  , "setVel"   , "[vel]"              , "Sets target for motor velocity in revs/min"} ,
-    // {_cmd_setReference  , "setRef"   , "[yref]"              , "Sets velocity reference"} ,
     {_cmd_setElevation  , "setEle"   , "[phiref]"              , "Sets Elevation reference (degrees)"} ,
     {_cmd_setAzimuth  , "setAzi"   , "[thetaref]"              , "Sets Azimuth reference (degrees)"} ,
-    {_cmd_setServo  , "setServo"   , "[angle]"              , "Sets servo rotation (deg)"} ,
-    {_cmd_calibrateElevation  , "zeroEle"   , ""              , "Sets current elevation angle to zero"} ,
+    {_cmd_setServo  , "setServo"   , "[angle]"              , "Sets servo rotation (deg) to act as the zero point"} ,
+    {_cmd_launch  , "launch"   , ""              , "Uses the Servo to Launch"} ,
+    {_cmd_calibrateElevation  , "zeroAim"   , ""              , "Sets current elevation and azimuth angles to zero"} ,
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
 enum {CMD_MAX_TOKENS = 5};      // Maximum number of tokens to process (command + arguments)
@@ -115,8 +108,19 @@ static void _cmd_setServo(int argc, char *argv[])
     else
     {
         control_Servo(atof(argv[1]));
-        printf("%f\n", getAzimuth());
+        printf("%f\n", getServo());
+        servo_adjust(getServo());
     }
+}
+
+static void _cmd_launch(int argc, char *argv[])
+{
+    /* TODO: Supress compiler warnings for unused arguments */
+    UNUSED(argc);
+    UNUSED(argv);
+    
+    servo_adjust(180);      //flex the servo
+    servo_timer_start();    //start timer
 }
 static void _cmd_setVelocity(int argc, char *argv[])
 {
@@ -131,59 +135,7 @@ static void _cmd_setVelocity(int argc, char *argv[])
         printf("%f\n", getReference());
     }
 }
-// static void _cmd_updateKalman(int argc, char *argv[])
-// {
-//     /* TODO: Supress compiler warnings for unused arguments */
-//     if(argc != 3)
-//         {
-//             printf("Incorrect arguments\n");
-//         }
-//     else
-//     {
-//         kalman_set_angle(atof(argv[1]));
-//         kalman_set_velocity(atof(argv[2]));
-    
-//     kalman_update();
-//     printf("%f\n", getKalmanAngle());
-//     printf("%f\n", getKalmanVelocity());
-//     printf("%f\n", getKalmanBias());
-//     }
-// }
-// static void _cmd_updateControl(int argc, char *argv[])
-// {
-//     /* TODO: Supress compiler warnings for unused arguments */
-//     if(argc != 3)
-//         {
-//             printf("Incorrect arguments\n");
-//         }
-//     else
-//     {  
-//         ctrl_set_x1(atof(argv[1]));
-//         ctrl_set_x2(atof(argv[2]));
-    
-//     ctrl_update();
-//     printf("%f\n", getControl());
-//     }
-// }
-static void _cmd_logEncData(int argc, char *argv[])
-{
-    /* TODO: Supress compiler warnings for unused arguments */
-    UNUSED(argc);
-    UNUSED(argv);
-    
-    /* TODO: Start pendulum data logging */
-    pend_logging_start();
-}
 
-// static void _cmd_logIMUData(int argc, char *argv[])
-// {
-//     /* TODO: Supress compiler warnings for unused arguments */
-//     UNUSED(argc);
-//     UNUSED(argv);
-    
-//     /* TODO: Start pendulum data logging */
-//     imu_logging_start();
-// }
 
 static void _cmd_calibrateElevation(int argc, char *argv[])
 {
@@ -192,7 +144,6 @@ static void _cmd_calibrateElevation(int argc, char *argv[])
     UNUSED(argv);
     //clear encoder value
     ele_encoder_reset();
-    
 }
 
 void _cmd_getEncoderCount(int argc, char *argv[])
@@ -200,9 +151,6 @@ void _cmd_getEncoderCount(int argc, char *argv[])
     /* TODO: Supress compiler warnings for unused arguments */
     UNUSED(argc);
     UNUSED(argv);
-    
-    /* TODO: Read the potentiometer voltage */
-    // float voltage = pendulum_read_voltage();
 
     //We want to read an ENCODER for this one!!
     int32_t enc_count1 = motor_encoder1_getValue();

@@ -100,12 +100,7 @@ static osTimerAttr_t _control_timer_attr =
 {
     .name = "controlTimer"
 };
-// static void kalman_loop_update(void *arg);
-// static osTimerId_t _kalman_timer_id;
-// static osTimerAttr_t _kalman_timer_attr =
-// {
-//     .name = "kalmanTimer"
-// };
+
 
 static void aim_loop_update(void *arg);
 static osTimerId_t _aim_timer_id;
@@ -123,34 +118,20 @@ static osTimerAttr_t _servo_timer_attr =
 
 void control_loop_init(void)  
  { 
-     /* TODO: Initialise timer for use with pendulum data logging */
      _control_timer_id = osTimerNew(control_loop_update, osTimerPeriodic, NULL, &_control_timer_attr);
-    //  _kalman_timer_id = osTimerNew(kalman_loop_update, osTimerPeriodic, NULL, &_kalman_timer_attr);
  }
 
 
  void aim_loop_init(void)  
  { 
-     /* TODO: Initialise timer for use with pendulum data logging */
      _aim_timer_id = osTimerNew(aim_loop_update, osTimerPeriodic, NULL, &_aim_timer_attr);
-    //  _kalman_timer_id = osTimerNew(kalman_loop_update, osTimerPeriodic, NULL, &_kalman_timer_attr);
  }
 
   void servo_loop_init(void)  
  { 
-     /* TODO: Initialise timer for use with pendulum data logging */
      _servo_timer_id = osTimerNew(servo_loop_update, osTimerPeriodic, NULL, &_servo_timer_attr);
-    //  _kalman_timer_id = osTimerNew(kalman_loop_update, osTimerPeriodic, NULL, &_kalman_timer_attr);
  }
-// void kalman_timer_start(void)
-// {
-//     int delay = 1000/100;
-//     osTimerStart(_kalman_timer_id,delay);
-// }
-// void kalman_timer_stop(void)
-// {
-//     osTimerStop(_kalman_timer_id);
-// }
+
 
 void control_timer_start(void)
 {
@@ -180,8 +161,7 @@ void aim_timer_stop(void)
 
 void servo_timer_start(void)
 {
-    int delay = 1000/FREQ;
-    // int delay = 5000;
+    int delay = 1000;       // will callback in 1 second
     printf("Servo timer started\n");
     osTimerStart(_servo_timer_id,delay);
 }
@@ -197,17 +177,6 @@ void control_set_speed(float spd)
     ctrl_set_yref(speed);
 }
 
-
-void kalman_loop_update(void *arg)  //kalman updates for calibration
-{       UNUSED(arg);
-        IMU_read();
-        angle = get_acc_angle();
-        // angvel = get_gyroY();     //want angle of rotation about Y axis
-        // kalman_set_angle(angle);  
-        // kalman_set_velocity(angvel);
-        // kalman_update();          //update kalman
-
-}
 
 void control_loop_update(void *arg)
 {       UNUSED(arg);
@@ -414,6 +383,7 @@ void servo_loop_update(void *arg){
     // printf("Servo\n");
     float degrees = getServo(); // hijack elevation rn
 
-    servo_adjust(degrees);
+    servo_adjust(degrees);      //set to zero point
+    servo_timer_stop();
 
 }
