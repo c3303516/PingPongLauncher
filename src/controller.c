@@ -26,9 +26,9 @@ int i;
 // static float Ki = 500;
 // static float Kd = 0;
 
-static float Kp = 30;    
-static float Ki = 30;
-static float Kd = 0;
+static float Kp = 5;    
+static float Ki = 10;
+static float Kd = 3;
 
 static float ele_Kp = 60;        //these params are without the 13000 offset it elevation adjust
 static float ele_Ki = 40;

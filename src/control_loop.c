@@ -239,8 +239,8 @@ void control_loop_update(void *arg)
 
     refvel = getReference();
 
-    //35 is 20 000 input, for the 5V. Changed to 30000 after pwm shenanigans
-    ubar = 20000*(refvel/35);       // approximate linearly from ref
+    //10000 is 900rpm at 6 volts
+    ubar = 10000*(refvel/900);       // approximate linearly from ref
 
     // printf("referencevalue %0.1f\n", refvel);
     //try simpsons rule, assuming linear over timestep
@@ -258,47 +258,47 @@ void control_loop_update(void *arg)
     input1 = ctrl_update(error1new, erri1, derr1);      //update control
     thrustpercent1 = ubar + input1;           // this will allow negative inptus
 
-    // error2new = refvel - angvel2;
-    // derr2 = (error2new - error2old)/(PERIODL);      //find derr/dt might wrong here?
-    // erri2 = erri2 + 0.5*(error2new + error2old)*(PERIODL);      //find approx integral. maybe adjust this later
+    error2new = refvel - angvel2;
+    derr2 = (error2new - error2old)/(PERIODL);      //find derr/dt might wrong here?
+    erri2 = erri2 + 0.5*(error2new + error2old)*(PERIODL);      //find approx integral. maybe adjust this later
 
-    // if ((angvel2 == 0 )||(refvel == 0 )){
-    //         error2new = 0;
-    //         erri2 = 0;       //clear all control
-    //         derr2 = 0;
-    //     }
-    // input2 = ctrl_update(error2new, erri2, derr2);      //update control
-    // thrustpercent2 = ubar + input2;           // this will allow negative inptus
+    if ((angvel2 == 0 )||(refvel == 0 )){
+            error2new = 0;
+            erri2 = 0;       //clear all control
+            derr2 = 0;
+        }
+    input2 = ctrl_update(error2new, erri2, derr2);      //update control
+    thrustpercent2 = ubar + input2;           // this will allow negative inptus
 
-    // error3new = refvel - angvel3;
-    // derr3 = (error3new - error3old)/(PERIOD);      //find derr/dt might wrong here?
-    // erri3 = erri3 + 0.5*(error3new + error3old)*(PERIODL);      //find approx integral. maybe adjust this later
+    error3new = refvel - angvel3;
+    derr3 = (error3new - error3old)/(PERIOD);      //find derr/dt might wrong here?
+    erri3 = erri3 + 0.5*(error3new + error3old)*(PERIODL);      //find approx integral. maybe adjust this later
 
-    // if ((angvel3 == 0 )||(refvel == 0 )){
-    //         error3new = 0;
-    //         erri3 = 0;       //clear all control
-    //         derr3 = 0;
-    //     }
-    // input3 = ctrl_update(error3new, erri3, derr3);      //update control
-    // thrustpercent3 = ubar + input3;           // this will allow negative inptus
+    if ((angvel3 == 0 )||(refvel == 0 )){
+            error3new = 0;
+            erri3 = 0;       //clear all control
+            derr3 = 0;
+        }
+    input3 = ctrl_update(error3new, erri3, derr3);      //update control
+    thrustpercent3 = ubar + input3;           // this will allow negative inptus
 
     // printf("controlinput %0.5f\n",thrustpercent);
 
     //saturation tests
-    // if (thrustpercent1 > INPUTMAX){
-    //     thrustpercent1 = INPUTMAX;        //saturate the percentage
-    //     // erri1 = 0;       //cleear
-    // }
-    // if (thrustpercent2 > INPUTMAX){
-    //     thrustpercent2 = INPUTMAX;        //saturate the percentage
-    //     // erri2 = 0;       //cleear
-    // }
-    // if (thrustpercent3 > INPUTMAX){
-    //     thrustpercent3 = INPUTMAX;        //saturate the percentage
-    //     // erri3 = 0;       //cleear
-    // }
+    if (thrustpercent1 > INPUTMAX){
+        thrustpercent1 = INPUTMAX;        //saturate the percentage
+        // erri1 = 0;       //cleear
+    }
+    if (thrustpercent2 > INPUTMAX){
+        thrustpercent2 = INPUTMAX;        //saturate the percentage
+        // erri2 = 0;       //cleear
+    }
+    if (thrustpercent3 > INPUTMAX){
+        thrustpercent3 = INPUTMAX;        //saturate the percentage
+        // erri3 = 0;       //cleear
+    }
 
-    // printf("thrust %0.5f\n", thrustpercent1);
+    printf("thrust %0.5f\n", thrustpercent1);
     velocity_adjust(thrustpercent1,thrustpercent2,thrustpercent3);     //apply new velocity
 
     printf("motor vel %0.5f\n", angvel1);
@@ -405,7 +405,6 @@ void aim_loop_update(void *arg)
     // printf("Current Ele Azi %0.3f, %0.3f\n", elevation, azimuth);
 
     
-    // servo_adjust(getElevation());
 }
 
 
