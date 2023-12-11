@@ -114,7 +114,7 @@ static void _cmd_setServo(int argc, char *argv[])
         }
     else
     {
-        control_set_azimuth(atof(argv[1]));
+        control_Servo(atof(argv[1]));
         printf("%f\n", getAzimuth());
     }
 }

@@ -218,7 +218,7 @@ void control_loop_update(void *arg)
     enc1_t = motor_encoder1_getValue();
     enc2_t = motor_encoder2_getValue();
     enc3_t = motor_encoder3_getValue();
-    printf("Encoders %i, %i, %i\n",enc1_t,enc2_t,enc3_t);
+    // printf("Encoders %i, %i, %i\n",enc1_t,enc2_t,enc3_t);
     enc1_diff = enc1_t - enc1_t1;
     if (enc1_diff < 0){     //wrap around consideration for encodr count
         enc1_diff = enc1_diff + 2147483647;
@@ -298,7 +298,7 @@ void control_loop_update(void *arg)
         // erri3 = 0;       //cleear
     }
 
-    printf("thrust %0.5f\n", thrustpercent1);
+    // printf("thrust %0.5f\n", thrustpercent1);
     velocity_adjust(thrustpercent1,thrustpercent2,thrustpercent3);     //apply new velocity
 
     printf("motor vel %0.5f\n", angvel1);
@@ -412,8 +412,8 @@ void aim_loop_update(void *arg)
 void servo_loop_update(void *arg){
 
     // printf("Servo\n");
-    // float degrees = getElevation(); // hijack elevation rn
+    float degrees = getServo(); // hijack elevation rn
 
-    // servo_adjust(degrees);
+    servo_adjust(degrees);
 
 }
