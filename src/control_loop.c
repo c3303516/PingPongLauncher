@@ -6,16 +6,13 @@
 #include "stm32f4xx_hal.h"
 #include "cmsis_os2.h"
 #include "uart.h"
-#include "pendulum.h"
 #include "motor.h"
-#include "IMU.h"
-#include "kalman.h"
 #include "controller.h"
 #include "dummy_task.h"
 
 #define FREQL 5       //launher
 #define FREQ 10      //period of control loop in seconds aim loop
-#define INPUTMAX 100000/2       //cant remember why the 2 was there. Fixed pwm earlier tho?
+#define INPUTMAX 100000/2       //2 is necessary to fix PWM in oscilloscope.
 #define PERIOD 1./FREQ
 #define PERIODL 1./FREQL
 
@@ -270,7 +267,7 @@ void control_loop_update(void *arg)
     // printf("thrust %0.5f\n", thrustpercent1);
     velocity_adjust(thrustpercent1,thrustpercent2,thrustpercent3);     //apply new velocity
 
-    printf("motor vel %0.5f\n", angvel1);
+    // printf("motor vel %0.5f\n", angvel1);/
 
     enc1_t1 = enc1_t;       //update encoder count
     error1old = error1new;
@@ -278,8 +275,6 @@ void control_loop_update(void *arg)
     error2old = error2new;
     enc3_t1 = enc3_t;       //update encoder count
     error3old = error3new;
-
-
 
 }
 

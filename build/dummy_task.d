@@ -55,5 +55,5 @@ build/dummy_task.o: src/dummy_task.c src/dummy_task.h \
  ../STM32Cube_F4_FW/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h \
  ../STM32Cube_F4_FW/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../STM32Cube_F4_FW/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
- ../CMSIS_5/CMSIS/RTOS2/Include/cmsis_os2.h src/uart.h src/pendulum.h \
- src/motor.h src/IMU.h src/kalman.h src/controller.h src/control_loop.h
+ ../CMSIS_5/CMSIS/RTOS2/Include/cmsis_os2.h src/uart.h src/motor.h \
+ src/controller.h src/control_loop.h

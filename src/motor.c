@@ -246,11 +246,11 @@ void elevation_adjust(float lift)
     // ele_duty = lift;
     if (lift < 0){
         HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
-        ele_dutycycle = fabs(lift); //+ 9000;     //adjust for direction
+        ele_dutycycle = fabs(lift) + 5000;     //adjust for direction. Offset just reduces the dead zone slightly
     } else
         if (lift > 0) {
             HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);		//output of dire pin
-            ele_dutycycle = lift;// + 9000;	
+            ele_dutycycle = lift + 5000;	
         }
         else{
             ele_dutycycle = 0;

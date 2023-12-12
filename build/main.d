@@ -56,6 +56,5 @@ build/main.o: src/main.c \
  ../STM32Cube_F4_FW/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../STM32Cube_F4_FW/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../CMSIS_5/CMSIS/RTOS2/Include/cmsis_os2.h src/uart.h src/cmd_task.h \
- src/heartbeat_task.h src/dummy_task.h src/pendulum.h src/motor.h \
- src/data_logging.h src/IMU.h src/controller.h src/kalman.h \
+ src/heartbeat_task.h src/dummy_task.h src/motor.h src/controller.h \
  src/control_loop.h

@@ -6,12 +6,8 @@
 #include "stm32f4xx_hal.h" // to import UNUSED() macro
 #include "cmd_line_buffer.h"
 #include "cmd_parser.h"
-#include "pendulum.h"
-#include "data_logging.h"
-#include "IMU.h"
 #include "controller.h"
 #include "motor.h"
-#include "kalman.h"
 #include "control_loop.h"
 
 // Type for each command table entry

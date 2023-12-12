@@ -7,12 +7,8 @@
 #include "cmd_task.h"
 #include "heartbeat_task.h"
 #include "dummy_task.h"
-#include "pendulum.h"
 #include "motor.h"
-#include "data_logging.h"
-#include "IMU.h"
 #include "controller.h"
-#include "kalman.h"
 #include "control_loop.h"
 
 static void SystemClock_Config(void);
@@ -28,11 +24,9 @@ int main(void)
 
     // Initialise hardware modules
     uart_init();
-    pendulum_init();
     motor_PWM_init();
     motor_encoder_init();
     ctrl_init();
-    kalman_init();
     control_loop_init();
     aim_loop_init();
     servo_loop_init();

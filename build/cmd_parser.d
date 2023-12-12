@@ -63,6 +63,5 @@ build/cmd_parser.o: src/cmd_parser.c \
  ../STM32Cube_F4_FW/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  src/cmd_line_buffer.h \
  c:\users\mark\documents\mcha3500\mcha3500_windows_toolchain\toolchain\gcc-arm-none-eabi\lib\gcc\arm-none-eabi\9.2.1\include\stdbool.h \
- src/cmd_parser.h src/pendulum.h src/data_logging.h src/IMU.h \
- src/controller.h src/motor.h src/kalman.h src/control_loop.h \
+ src/cmd_parser.h src/controller.h src/motor.h src/control_loop.h \
  src/heartbeat_cmd.h

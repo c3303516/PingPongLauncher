@@ -5,10 +5,7 @@
 #include "stm32f4xx_hal.h"
 #include "cmsis_os2.h"
 #include "uart.h"
-#include "pendulum.h"
 #include "motor.h"
-#include "IMU.h"
-#include "kalman.h"
 #include "controller.h"
 #include "control_loop.h"
 

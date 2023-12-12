@@ -46,12 +46,8 @@ SRC_STM = \
 	$(SRCDIR)/heartbeat_task.c \
 	$(SRCDIR)/heartbeat_cmd.c \
 	$(SRCDIR)/dummy_task.c \
-	$(SRCDIR)/pendulum.c \
 	$(SRCDIR)/motor.c \
-	$(SRCDIR)/data_logging.c \
 	$(SRCDIR)/controller.c \
-	$(SRCDIR)/IMU.c \
-	$(SRCDIR)/kalman.c \
 	$(SRCDIR)/control_loop.c \
 	$(SRCDIR)/qpas_sub_noblas.c
 
