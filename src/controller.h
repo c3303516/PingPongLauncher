@@ -12,11 +12,11 @@ float getReference(void);
 float getElevation(void);
 void control_set_elevation(float);
 float getEleControl(void);
-void ele_ctrl_update(float,float,float);
+float ele_ctrl_update(float,float,float);
 float getAzimuth(void);
 void control_set_azimuth(float);
 float getAziControl(void);
-void azi_ctrl_update(float,float,float);
+float azi_ctrl_update(float,float,float);
 void control_Servo(float);
 float getServo(void);
 

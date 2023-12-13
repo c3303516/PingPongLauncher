@@ -10,7 +10,7 @@
 #include "controller.h"
 #include "dummy_task.h"
 
-#define FREQL 5       //launher
+#define FREQL 10       //launher
 #define FREQ 10      //period of control loop in seconds aim loop
 #define INPUTMAX 100000/2       //2 is necessary to fix PWM in oscilloscope.
 #define PERIOD 1./FREQ
@@ -99,11 +99,18 @@ static osTimerAttr_t _control_timer_attr =
 };
 
 
-static void aim_loop_update(void *arg);
-static osTimerId_t _aim_timer_id;
-static osTimerAttr_t _aim_timer_attr =
+static void ele_loop_update(void *arg);
+static osTimerId_t _ele_timer_id;
+static osTimerAttr_t _ele_timer_attr =
 {
-    .name = "aimTimer"
+    .name = "eleTimer"
+};
+
+static void azi_loop_update(void *arg);
+static osTimerId_t _azi_timer_id;
+static osTimerAttr_t _azi_timer_attr =
+{
+    .name = "aziTimer"
 };
 
 static void servo_loop_update(void *arg);
@@ -121,7 +128,9 @@ void control_loop_init(void)
 
  void aim_loop_init(void)  
  { 
-     _aim_timer_id = osTimerNew(aim_loop_update, osTimerPeriodic, NULL, &_aim_timer_attr);
+     _ele_timer_id = osTimerNew(ele_loop_update, osTimerPeriodic, NULL, &_ele_timer_attr);
+     _azi_timer_id = osTimerNew(azi_loop_update, osTimerPeriodic, NULL, &_azi_timer_attr);
+ 
  }
 
   void servo_loop_init(void)  
@@ -148,12 +157,14 @@ void aim_timer_start(void)
     int delay = 1000/FREQ;
     // int delay = 5000;
     printf("Aim timer started\n");
-    osTimerStart(_aim_timer_id,delay);
+    osTimerStart(_ele_timer_id,delay);
+    osTimerStart(_azi_timer_id,delay);
 }
 
 void aim_timer_stop(void)
 {
-    osTimerStop(_aim_timer_id);
+    osTimerStop(_ele_timer_id);
+    osTimerStop(_azi_timer_id);
 }
 
 void servo_timer_start(void)
@@ -278,13 +289,13 @@ void control_loop_update(void *arg)
 
 }
 
-void aim_loop_update(void *arg)
+void ele_loop_update(void *arg)
 {   UNUSED(arg);
     // Ele_new = elevation_encoder_getAngle(ele_encoder_getValue());
     Ele_new = ele_encoder_getValue();
-    ele_angvel = (Ele_new - Ele_old)/(PERIOD);
+    ele_angvel = (Ele_new - Ele_old);///(PERIOD);
     // printf("Elevation %0.1f\n",getElevation());
-    newrefEle = 298*14*2*(50/31.25)*(getElevation()/360);        //ref angle to ref encoder count
+    newrefEle = 8344*(50/31.25)*(getElevation()/360);        //ref angle to ref encoder count
                         //gear ratio is approximated from creo model.
     if (newrefEle != refEle){
         Ele_erri = 0;       //clear integrator 
@@ -295,8 +306,8 @@ void aim_loop_update(void *arg)
     Ele_derr = (Ele_errornew - Ele_errorold)/(PERIOD);      //find derr/dt
     Ele_erri = Ele_erri + 0.5*(Ele_errornew + Ele_errorold)*(PERIOD);      //find approx integral. maybe adjust this later
 
-    ele_ctrl_update(Ele_errornew, Ele_erri, Ele_derr);      //update control
-    ele_input = getEleControl(); 
+    ele_input = ele_ctrl_update(Ele_errornew, Ele_erri, Ele_derr);      //update control
+    
 
     ele_mag = fabs(Ele_errornew);
     // if ((ele_angvel = 0)&&(ele_mag<10)){  //will stop moving if within this?
@@ -314,30 +325,52 @@ void aim_loop_update(void *arg)
         ele_input = INPUTMAX;        //saturate the percentage
         Ele_erri = 0;      //cleear
     }
+
+    // printf("ElevationRef %0.2f\n", refEle);
+    // printf("ControlINput %0.2f\n", ele_input);
+    // printf("Elevation %0.2f\n", Ele_new);
+    elevation_adjust(ele_input);
+    Ele_old = Ele_new;
+    Ele_errorold = Ele_errornew;
+    
+    //298*14*2 = 8344
+    // elevation = (360*(Ele_new/(8344)))*(31.25/50);
+    
+    // printf("Set Ele Azi %0.1f, %0.1f\n",newrefEle,newrefazi);
+    // printf("Current Ele Azi %0.3f, %0.3f\n", elevation, azimuth);
+}
+
+    
+void azi_loop_update(void *arg)
+{   UNUSED(arg);
     
     //AZIMUTH///////////
     azi_new = azi_encoder_getValue();
-    azi_angvel = (azi_new - azi_old)/(PERIOD);
+    azi_angvel = (azi_new - azi_old);///(PERIOD);       //no longer actual angvel, but it works
     // printf("Azi %0.1f\n", getAzimuth());
-    newrefazi = 298*14*2*(getAzimuth()/360);        //work on encoder count now?
+    // newrefazi = 8344*(getAzimuth()/360);        //work on encoder count now?
+    
+    newrefazi = 23.17777*getAzimuth();        //work on encoder count now?
 
     if (newrefazi != refazi){
         azi_erri = 0;       //clear integrator 
         refazi = newrefazi;
+        azi_errorold = 0;
     }
 
     azi_errornew = refazi - azi_new;        //find error
     azi_derr = (azi_errornew - azi_errorold)/(PERIOD);      //find derr/dt
     azi_erri = azi_erri + 0.5*(azi_errornew + azi_errorold)*(PERIOD);      //find approx integral. maybe adjust this later
 
-    azi_ctrl_update(azi_errornew, azi_erri, azi_derr);      //update control
-    azi_input = getAziControl(); 
+    azi_input = azi_ctrl_update(azi_errornew, azi_erri, azi_derr);      //update control
+   
 
     azi_mag = fabs(azi_errornew);
-    if ((azi_angvel = 0)&&(azi_mag<10)){  //will stop moving if within this
-
-        azi_errornew = 0;
-        azi_erri = 0;
+    // if ((azi_angvel = 0)&&(azi_mag<10)){  //will stop moving if within this
+    if (azi_mag<10){  //will stop moving if within this
+        // azi_errornew = 0;
+        // azi_erri = 0;
+        azi_input = 0;
     }
 
     if (azi_input < (-1*INPUTMAX) ){
@@ -349,22 +382,14 @@ void aim_loop_update(void *arg)
     }
     // ele_input = 0;
 
-    elevation_adjust(ele_input);
     azimuth_adjust(azi_input);
 
+    // printf("ENc %f\n", azi_new);
 
-
-    // printf("ElevationRef %0.2f\n", refEle);
-    // printf("ControlINput %0.2f\n", ele_input);
-    // printf("Elevation %0.2f\n", Ele_new);
-    Ele_old = Ele_new;
-    Ele_errorold = Ele_errornew;
     azi_old = azi_new;
     azi_errorold = azi_errornew;
 
-
-    elevation = (360*(Ele_new/(298*14*2)))*(31.25/50);
-    azimuth = 360*(azi_new/(298*14*2));
+    // azimuth = 360*(azi_new/(8344));
     // printf("Set Ele Azi %0.1f, %0.1f\n",newrefEle,newrefazi);
     // printf("Current Ele Azi %0.3f, %0.3f\n", elevation, azimuth);
 

@@ -264,17 +264,17 @@ void azimuth_adjust(float aim)
 {
     if (aim < 0){
         HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);
-        azi_dutycycle = fabs(aim);     //adjust for direction
+        azi_dutycycle = fabs(aim) + 5000;     //adjust for direction
     } else
         if (aim > 0) {
             HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_SET);		//output of dire pin
-            azi_dutycycle = aim;	
+            azi_dutycycle = aim + 5000;	
         }
         else{
             azi_dutycycle = 0;
         }
    // dutycycle = (TIMERPERIOD)*thrust;	
-    // printf("duty cycle %0.2f\n", ele_dutycycle);
+    // printf("duty cycle %0.2f\n", azi_dutycycle);
 	__HAL_TIM_SET_COMPARE(&_htim4, TIM_CHANNEL_1, (uint32_t)azi_dutycycle);
 }
 

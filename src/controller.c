@@ -26,20 +26,20 @@ int i;
 // static float Ki = 500;
 // static float Kd = 0;
 
-static float Kp = 6;    
-static float Ki = 10;
-static float Kd = 2;
+static float Kp = 8;    
+static float Ki = 8;
+static float Kd = 3;
 
-static float ele_Kp = 50;        //these params are without the 13000 offset it elevation adjust
-static float ele_Ki = 40;
-static float ele_Kd = 12;
+static float ele_Kp = 25;        //these params are without the 13000 offset it elevation adjust
+static float ele_Ki = 20;
+static float ele_Kd = 6;
 // static float ele_Kp = 10;        //these params are without the 13000 offset it elevation adjust
 // static float ele_Ki = 5;
 // static float ele_Kd = 10;
 
 static float azi_Kp = 50;        //500    
-static float azi_Ki = 100;
-static float azi_Kd = 20;
+static float azi_Ki = 20;
+static float azi_Kd = 10;
 
 
 static float elevation = 0;
@@ -122,14 +122,14 @@ float ctrl_update(float err, float err_i, float err_d)
     return u;
 }
 
-void ele_ctrl_update(float err, float err_i, float err_d)
+float ele_ctrl_update(float err, float err_i, float err_d)
 {
-u_ele = ele_Kp*err + ele_Ki*err_i + ele_Kd*err_d;
-// return u;
+    u_ele = ele_Kp*err + ele_Ki*err_i + ele_Kd*err_d;
+    return u_ele;
 }
 
-void azi_ctrl_update(float err, float err_i, float err_d)
+float azi_ctrl_update(float erra, float erra_i, float erra_d)
 {
-u_azi = azi_Kp*err + azi_Ki*err_i + azi_Kd*err_d;
-// return u;
+    u_azi = azi_Kp*erra + azi_Ki*erra_i + azi_Kd*erra_d;
+    return u_azi;
 }
